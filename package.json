@@ -1,0 +1,33 @@
+{
+  "name": "v4",
+  "version": "1.0.0",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-zxcvbn": "esbuild node_modules/zxcvbn-typescript/lib/index.js --bundle --format=esm  --outfile=public/js/npm/zxcvbn/zxcvbn.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usedlobster/adbm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/usedlobster/adbm/issues"
+  },
+  "homepage": "https://github.com/usedlobster/adbm#readme",
+  "description": "",
+  "devDependencies": {
+    "esbuild": "^0.25.9",
+    "esbuild-plugin-tsc": "^0.5.0",
+    "typescript": "^5.9.2",
+    "zxcvbn-typescript": "^5.0.1"
+  },
+  "dependencies": {
+    "tslib": "^2.5.2"
+  }
+
+
+
+}

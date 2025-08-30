@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+
+  <IfModule mod_negotiation.c>
+     Options -MultiViews -Indexes
+  </IfModule>
+
+RewriteEngine On
+RewriteRule ^(favicon.ico|robots.txt)$ - [L]
+RewriteRule ^(css|img|js|api) - [L]
+# RewriteRule ^global+ /boot/global.php [L]
+RewriteRule ^(boot) - [L]
+RewriteRule ^ /boot/boot.php [L]
+</IfModule>
+
+
+<IfModule !mod_rewrite.c>
+      Error "mod_rewrite is needed"
+</IfModule>

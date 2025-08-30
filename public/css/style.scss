@@ -1,0 +1,47 @@
+// @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@font-face {
+  font-family: 'Roboto';
+  font-display: swap;
+  /* other properties */
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* keep */
+  html {
+    font-family: 'Roboto' ,sans-serif;
+    font-size:16px;
+  }
+}
+
+@layer utilities {
+
+}
+
+@layer components {
+  .button-hover {
+    @apply transition-all duration-300
+    active:bg-gray-100/70
+    active:transition-colors;
+
+
+
+    @media (hover: hover) {
+      @apply hover:bg-gray-50/50
+      hover:rounded-md
+      hover:scale-125
+      hover:shadow;
+    }
+
+  }
+}
+
+[x-cloak=""] {
+  display: block;
+  display: none;
+}
+
+/*# sourceMappingURL=style.css.map */

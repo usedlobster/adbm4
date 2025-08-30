@@ -1,0 +1,35 @@
+{
+  "name": "wooster/app",
+  "version": "1.0.4",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "wooster",
+      "email": "me@wdennis.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "app\\": "app",
+      "sys\\": "sys"
+    }
+  },
+  "require": {
+    "php": ">=8.3",
+    "vlucas/phpdotenv": "^5.6",
+    "eftec/bladeone": "^4.19",
+    "ext-curl": "*",
+    "phpmailer/phpmailer": "^6.10",
+    "ext-sodium": "*",
+    "ext-openssl": "*",
+    "ext-redis": "*",
+    "bjeavons/zxcvbn-php": "^1.4",
+    "ext-zend-opcache": "*"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}

@@ -1,0 +1,35 @@
+/vendor/
+/node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE specific files
+.idea/
+.vscode/
+.hidden/
+*.sublime-project
+*.sublime-workspace
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Cache and logs
+/cache/
+/logs/
+*.log
+
+# Build artifacts
+/build/
+/dist/
+/public/hot/
+/public/storage/
+
+
+# Temporary files
+*.swp
+*.swo
+*~

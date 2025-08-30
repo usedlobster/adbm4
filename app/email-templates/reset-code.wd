@@ -1,0 +1,18 @@
+%[let subject:='Password Reset']%;
+%[@include('header.wd')]%;
+Hello ** %[name]% **,
+
+You or somebody else has requested a password reset for your ADBM account.
+
+To reset your password, please enter this verification code:
+
+# %[code]%
+
+If you're not at the reset code page, you can access it by clicking the "Reset password" link on the main login page and entering your email.
+
+This code will expire in 10 minutes to ensure the security of your account. After this time, you will need to request a new code.
+
+Remember, if you didn't request this reset, your account is still secure. No changes can be made without access to both this code and your email account. You can confidently disregard this message.
+
+
+%[@include('footer.wd')]%
