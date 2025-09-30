@@ -1,55 +1,46 @@
 <?php
-    // api/password-strength.php
+
     header('Content-Type: application/json');
-    require_once '../../vendor/autoload.php';
-
-    use ZxcvbnPhp\Zxcvbn;
-
-    function checkPasswordStrength($password) {
-        try {
-            $zxcvbn = new Zxcvbn();
-            $strength = $zxcvbn->passwordStrength($password);
-            return [
-                    'score' => $strength['score'],
-                    'feedback' => $strength['feedback'],
-                    'isValid' => $strength['score'] >= 3
-            ];
-        } catch (Exception $e) {
-            return [
-                    'error' => 'Unable to check password strength',
-                    'isValid' => false
-            ];
-        }
+    // Limit input size to 256 bytes
+    $input = file_get_contents('php://input' , false , null , 0 , 512);
+    if ( $input === false )
+    {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid input' , 'isValid' => false]);
+        exit;
+    }
+    elseif ( strlen($input) >= 512 )
+    {
+        http_response_code(413);
+        echo json_encode(['error' => 'Input too large' , 'isValid' => false]);
+        exit;
     }
 
     try
     {
-        $redis = new Redis();
-        $redis->connect('127.0.0.1' , 6379);
-
-        $ip = $_SERVER['REMOTE_ADDR'];
-
-        $key = "password_strength_rate:{$ip}";
-        $requests = $redis->incr($key);
-        if ($requests === 1) {
-            $redis->expire($key, 30); // Reset after 30 seconds
-        }
-        if ( $requests > 30 )
+        $data = json_decode($input , true);
+        if ( !is_array($data) || !isset($data[ 'password' ]) || !is_string($data[ 'password' ]) )
         {
-            http_response_code(429) ;
-            throw new \Exception('Too many requests') ;
+            throw new Exception('Invalid JSON structure');
         }
 
-        // Simple input sanitization
-        $data = json_decode(file_get_contents('php://input') , true) ?? [];
-        $password = $data[ 'password' ] ?? '';
-        //
-        $result = checkPasswordStrength($password);
-        echo json_encode($result);
-    }
-    catch( Throwable $ex ) {
+        // Limit password length to 128 characters
+        $password = substr($data[ 'password' ] , 0 , 128);
+        require_once('../../vendor/bjeavons/zxcvbn-php');
+        $zxcvbn = new Zxcvbn();
+
+        $strength = $zxcvbn->passwordStrength($password);
         echo json_encode([
-                'error' => $ex->getMessage()
+                'score' => $strength[ 'score' ] ,
+                'feedback' => $strength[ 'feedback' ] ,
+                'isValid' => $strength[ 'score' ] >= 3
         ]);
     }
-    exit ;
+    catch ( Exception $e )
+    {
+        http_response_code(400);
+        echo json_encode([
+                'error' => 'Unable to check password strength' ,
+                'isValid' => false
+        ]);
+    }

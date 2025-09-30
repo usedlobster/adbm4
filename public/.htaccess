@@ -6,7 +6,7 @@
 
 RewriteEngine On
 RewriteRule ^(favicon.ico|robots.txt)$ - [L]
-RewriteRule ^(css|img|js|api) - [L]
+RewriteRule ^(css|img|js|api|raw|api) - [L]
 # RewriteRule ^global+ /boot/global.php [L]
 RewriteRule ^(boot) - [L]
 RewriteRule ^ /boot/boot.php [L]

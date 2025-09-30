@@ -1,5 +1,7 @@
 /vendor/
 /node_modules/
+/.temp
+/.temp2
 
 # Environment files
 .env

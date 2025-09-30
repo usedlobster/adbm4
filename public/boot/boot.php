@@ -1,41 +1,69 @@
 <?php
-
-    require_once "../../vendor/autoload.php";
-    const _DEV_MODE = true;
-
-    if ( session_status() !== PHP_SESSION_ACTIVE )
-        session_start();
-
+    session_start();
     try
     {
-        // development mode - testing
-        ini_set('log_errors' , 1);
-        ini_set('display_errors' , 1);
-        ini_set('display_startup_errors' , 1);
-        error_reporting(E_ALL & ~E_PARSE);;
-        clearstatcache(true);
-        opcache_reset();
+        $req = $_SERVER[ 'REQUEST_URI' ] ;
+        if ( !empty($_POST) ) {
+            $_SESSION[ '_app_post_' ] = $_POST;
+            header('Location: '. ($req) ?? '') ;
+            exit;
+        }
+        else if ( isset($_SESSION[ '_app_post_' ]) )
+        {
+            $_POST = $_SESSION[ '_app_post_' ];
+            unset($_SESSION[ '_app_post_' ]);
+        }
+        else
+            $_POST = [];
 
-        // build version
-        define('_BUILD' , microtime(true));
+        $t0 = microtime( true ) ;
 
-        // get full request uri
-        $rawreq = $_SERVER[ 'REQUEST_URI' ] ?? '';
-        // sanitize request
-        $req = htmlspecialchars(filter_var($rawreq , FILTER_SANITIZE_URL) , ENT_QUOTES , 'UTF-8');
-        // create app
-        $app = new \app\AppMaster();
-        // do post-save-redirect-get
-        $app->postRedirect($rawreq);
-        // route request
-        $app->route($req);
+        require_once __DIR__ . '/../../vendor/autoload.php' ;
+        Dotenv\Dotenv::createImmutable(__DIR__ . '/../../' )->safeLoad();
+
+        if ( !isset($_SESSION['_start'] ))
+        {
+            if ( !isset($_SESSION[ '_csrf' ]) )
+                $_SESSION[ '_csrf' ] = base64_encode(random_bytes(18));
+            $_SESSION[ '_start' ] = $t0 ;
+        }
+        else if (( $t0 - ( $_SESSION['_check']  ?? 0 )) > 30 )
+            $_SESSION[ '_check' ] = $t0;
+
+        // get dev mode , default is false
+        define( '_DEV_MODE' , $_ENV[ 'DEV_MODE' ] ?? false  ) ;
+
+
+        if ( _DEV_MODE ) {
+                ini_set('log_errors' , 1);
+                ini_set('display_errors' , 1);
+                ini_set('display_startup_errors' , 1);
+                error_reporting(E_ALL & ~E_PARSE);;
+                clearstatcache(true);
+                opcache_reset();
+                define(  '_BUILD' ,microtime(true)   ) ;
+        }
+        else
+            define(  '_BUILD' , $_ENV['BUILD'] ?? 1000  ) ;
+
+
+        ($_app = new \app\AppMaster())->route() ;
+
     }
     catch ( \Throwable $ex )
     {
-
+        __fatalexit( $ex->getMessage() ) ;
     }
     finally
     {
-        echo '<hr>done';
+        echo '<hr />' , round((microtime(true) - $t0 ) * 1e3 , 3), ' ms' ;
+        echo '<a href="/auth/signout">Sign Out</a>' ;
     }
 
+
+    function __fatalexit( $msg )
+    {
+        echo '<pre>' , $msg , '</pre>' ;
+        echo '<pre>' , nl2br( print_r( debug_backtrace() , true ) ) , '</pre>' ;
+        exit ;
+    }

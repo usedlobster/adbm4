@@ -43,7 +43,7 @@
         }
 
 
-        public static function audit(int $what , int $p1 = 0 , int $p2 = 0 , mixed $data = null)
+        public static function auditLog(int $what , int $p1 = 0 , int $p2 = 0 , mixed $data = null)
         {
             /*
             if ( SQL::Exec(
@@ -61,6 +61,43 @@
             */
         }
 
+
+        public static function rateLimit( mixed $idkey , array $check , int $mincheck = 0 )
+        {
+            try
+            {
+                $key = is_string($idkey) ? md5($idkey) : md5( serialize($idkey)) ;
+                // simple quickl check
+                if ( $mincheck > 0 )
+                {
+                    $red = \sys\Util::getRedis();
+                    if ( $red ) {
+                        if ( $red->exists('rate:'.$key) )
+                            return false;
+                        $red->setex('rate:'.$key , $mincheck , 1);
+                    }
+                }
+
+                if ( !empty( $check ) && is_array($check))
+                {
+                    $ft = $check[ 0 ] ?? 0;
+                    foreach ( $check[ 1 ] as $chk )
+                    {
+                        $failCount = \sys\Audit::getFail($key , $ft , $chk[ 0 ] ?? '5 minute');
+                        if ( $failCount >= ($chk[ 1 ] ?? 10) )
+                            return false;
+                    }
+                    \sys\Audit::setAttempt($key , $ft);
+                }
+                return true ;
+            }
+            catch ( \Throwable $ex )
+            {
+                // for safety assume was rate limited
+                return false;
+            }
+
+        }
 
 
     }

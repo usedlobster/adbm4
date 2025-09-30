@@ -23,20 +23,20 @@
         }
 
 
-        private function makePDO()
+        private function makePDO( )
         {
             if ( empty($this->_dsn) )
             {
                 $db = $this->_db ?? 'adbm4_master';
                 $this->_dsn = "mysql:host=127.0.0.8;port=8001;dbname={$db};charset=utf8mb4";
-                $this->_pdo = null;
+                $this->_pdo = null ;
             }
 
-            if ( empty($this->_pdo) )
+            if ( !$this->_pdo )
             {
                 try
                 {
-                    $this->_pdo = new PDO($this->_dsn , 'adbm4' , 'xoWHx2o_uEjftXoAZDj.Tr' , [
+                    $this->_pdo = new PDO($this->_dsn , 'adbm4' , $_ENV['DB_PASS'] , [
                             PDO::ATTR_PERSISTENT => true ,
                             PDO::ATTR_EMULATE_PREPARES => false ,
                             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
@@ -44,12 +44,17 @@
                 }
                 catch ( PDOException $e )
                 {
-                    echo \sys\Blade::getBlade()?->run('error.db' , ['db' => $this->_db , 'error' => $e->getMessage() ]) ;
+                    sleep(0 ) ;
+                    $this->_pdo = null ;
+                    // echo 'Database connection error: ' . $e->getMessage() ;
+                    error_log( $e ) ;
+                    echo '<h1>Database connection error</h1>' ;
+                    echo '<h2>Please try again in a few minutes</h2>' ;
+                    echo '<a href="/">Home</a>' ;
                     exit ;
-
                 }
-
             }
+
 
             return $this->_pdo;
         }

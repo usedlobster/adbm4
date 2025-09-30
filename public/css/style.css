@@ -1,6 +1,3 @@
-@font-face{font-family:"Roboto";font-display:swap}@tailwind base;@tailwind components;@tailwind utilities;@layer base{html{font-family:"Roboto",sans-serif;font-size:16px}}@layer utilities{}@layer components{.button-hover{@apply transition-all duration-300
-    active:bg-gray-100/70
-    active:transition-colors}@media(hover: hover){.button-hover{@apply hover:bg-gray-50/50
-      hover:rounded-md
-      hover:scale-125
-      hover:shadow}}}[x-cloak=""]{display:block;display:none}/*# sourceMappingURL=style.css.map */
+@font-face{font-family:"Roboto";font-display:swap}@tailwind base;@tailwind components;@tailwind utilities;@layer base{html{font-family:"Roboto",sans-serif;font-size:16px}}@layer utilities{}@layer components{.bar-button{@apply relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md}.bar-button{@apply text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500}.bar-button.red{@apply text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500}.bar-button:disabled{@apply bg-gray-500}.button-hover:hover{@apply transition-all duration-300
+        active:bg-gray-100/70
+        active:transition-colors;@apply hover:bg-gray-50/50 bg-red-500 hover:rounded-md hover:scale-125 hover:shadow}}[x-cloak=""]{display:block;display:none}/*# sourceMappingURL=style.css.map */

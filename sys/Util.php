@@ -6,67 +6,68 @@
     {
 
         private static array $_redis = [];
-
-        public static function generateRandomBytes($n)
-        {
-            $strong = false;
-            if ( $n < 1 || (empty(($r = openssl_random_pseudo_bytes($n , $strong)))) || !$strong || mb_strlen($r , '8bit') !== $n )
-                die('critical server failure');
-
-            return $r;
-        }
-
-
-        public static function generateRandomCode() : string
-        {
-            $hex = bin2hex(openssl_random_pseudo_bytes(4));
-            return strtoupper(substr($hex , 0 , 4).'-'.substr($hex , 3 , 4));
-        }
-
-        public static function generate8DigitCode() : string
-        {
-            // Get 4 bytes of random data (32 bits)
-            $bytes = openssl_random_pseudo_bytes(4);
-
-            // Convert to an unsigned 32-bit integer
-            $num = unpack('N' , $bytes)[ 1 ];
-
-            // To avoid modulo bias, we'll reject and retry if the number is too large
-            // Maximum value that's divisible by 100000000 without bias
-            $max = floor(0xFFFFFFFF / 100000000) * 100000000 - 1;
-
-            while ( $num > $max )
-            {
-                $bytes = openssl_random_pseudo_bytes(4);
-                $num = unpack('N' , $bytes)[ 1 ];
-            }
-
-            // Get last 8 digits
-            $code = str_pad(($num % 100000000) , 8 , '0' , STR_PAD_LEFT);
-
-            return substr($code , 0 , 4).'-'.substr($code , 4 , 4);
-        }
-
-        public static function getRedis(int $index = 0) : bool|\Redis
+        public static function getRedis(int $index = 0  ) : bool|\Redis
         {
             if ( $index < 0 )
                 return false;
 
-            $inst = self::$_redis[ $index ] ?? false;
-            if ( !$inst || !($inst->isConnected()) )
+            try
             {
-                $inst = new \Redis();
-                $inst->connect($_ENV[ 'REDIS_HOST' ] ?? 'localhost' ,
-                        $_ENV[ 'REDIS_PORT' ] ?? 6379 ,
-                        $_ENV[ 'REDIS_TIMEOUT' ] ?? 5.0);
-                if ( ($rpw = $_ENV[ 'REDIS_PASSWORD' ] ?? false) )
-                    $inst->auth($rpw);
-                $inst->select($index);
-                self::$_redis[ $index ] = $inst;
-            }
+                $inst = self::$_redis[ $index ] ?? false;
+                if ( !$inst )
+                {
 
-            return $inst;
+                    if ( !( $inst = new \Redis()))
+                        return false ;
+
+                    $inst->connect(
+                            $_ENV[ 'REDIS_HOST' ] ?? 'localhost' ,
+                            $_ENV[ 'REDIS_PORT' ] ?? 6379 ,
+                          $_ENV[ 'REDIS_TIMEOUT' ] ?? 5.0 );
+
+                    //if ( ($rpw = $_ENV[ 'REDIS_PASSWORD' ] ?? false) )
+                    //    $inst->auth($rpw);
+                    $inst->select($index);
+                    self::$_redis[ $index ] = $inst;
+                }
+
+                if ( !$inst->isConnected())
+                    return false ;
+
+                return $inst;
+            }
+            catch( \Exception $ex ) {
+                error_log( $ex->getMessage()) ;
+            }
+            return false ;
         }
+
+        public static function constantRunTime( callable $func , $args , float $execTime = .5 )
+        {
+            $start = microtime(true);
+            $result = $func(...$args);
+            $end = microtime(true);
+            $time = $execTime - ( $end - $start) ;
+            if ( $time > 0.1)
+                uSleep( floor( $time * 1e6   )) ;
+            return $result ;
+        }
+
+        public static function saveCookie( string $n , string $v , int $h = 3600 )
+        {
+            setcookie( $n , $v ,  [
+                    'expires' => time() + $h ,
+                    'path' => '/',
+                    'domain' => $_ENV['APP_DOMAIN'] ,
+                    'secure' => true,
+                    'httponly' => true,
+                    'samesite' => 'Lax'
+            ]);
+            $_COOKIE[ $n ] = $v ; // update instantly
+        }
+
+
+
 
 
     }

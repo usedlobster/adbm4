@@ -52,8 +52,6 @@
             return false ;
         }
 
-
-
         public static function sendTemplate( string $email , string $name , string $template , array $data)
         {
             try

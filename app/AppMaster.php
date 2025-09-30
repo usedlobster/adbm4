@@ -1,146 +1,72 @@
 <?php
 
-    namespace app;
-
-    class AppMaster
-    {
-
-        use AppRenderTrait,AppMenuTrait;
-
-        static protected $_login = null;
-        static protected $_blade = null;
-        static protected \Redis | null $_redis = null;
-
-        const int EDIT_CACHE_TTL = 60;
-        const int EDIT_MASK      = 3 ;
-
-        public function __construct()
-        {
-            $t = time();
-            if ( !isset($_SESSION[ '_check' ]) || ($_SESSION[ '_check' ] + 60) < $t )
-            {
-                $_SESSION[ '_check' ] = $t;
-                if ( \sys\db\SQL::Get0(" SELECT NOW() " , []) === false )
-                {
-                    echo $this->view('error.db' , []);
-                    exit;
-                }
-            }
-
-            // load login helper
-            if ( self::$_login === null )
-                self::$_login = new \app\AppLogin($this);
-
-            if ( self::$_redis === null || self::$_redis->ping() === false)
-                self::$_redis = \sys\Util::getRedis();
+    namespace app ;
 
 
-            // load blade viewer
-            if ( self::$_blade === null )
-                self::$_blade = new \sys\Blade();
+    class AppMaster {
 
+        use engine\AppViewEngineTrait ;
 
+        private static $_id = null;
+
+        private const NO_LOGIN = [
+                'sid' => 0 , 'pid' => 0 , 'db' => false , 'info' => false ];
+
+        public function __construct() {
+            self::$_id = $_SESSION[ '_id' ] ?? self::NO_LOGIN ;
         }
 
-        public function postRedirect($rawreq) : void
-        {
-            // do post-get-redirect
-            if ( is_array($_POST) && count($_POST) > 0 )
-            {
-                $_SESSION[ '_post' ] = $_POST;
-                unset($_POST);
-                if ( headers_sent() )
-                    throw new \Exception('Headers already sent');
-                header('Location: '.$rawreq);
-                exit;
-            }
-            elseif ( isset($_SESSION[ '_post' ]) )
-            {
-                $_POST = $_SESSION[ '_post' ];
-                unset($_SESSION[ '_post' ]);
-            }
-            else
-                $_POST = [];
+        public function getLogin() : array {
+            return self::$_id ?? $_SESSION[ '_id' ] ?? self::NO_LOGIN ;
         }
 
-        public function checkCSRF() : bool
+        public function setLogin( $sid , $pid , $db , $info )
         {
-            if ( !isset($_SESSION[ '_csrf' ]) || !isset($_POST[ '_token' ]) || $_SESSION[ '_csrf' ] !== $_POST[ '_token' ] )
-            {
-                \sys\UriUtil::navigateTo('/auth/signout');
-                return false; // should never get here ! as exit above
-            }
-
-            return true;
+            self::$_id = $_SESSION[ '_id' ] = ['sid' => $sid , 'pid' => $pid , 'db' => $db , 'info' => $info];
+            if ( $sid > 0 && $pid > 0 && $_SESSION[ '_remember_me_' ] ?? false )
+               (new \app\login\wd\AppLoginSystem())->rememberLogin($sid );
         }
 
-
-        public function view($v , $d = null)
-        {
-            $def = ['app' => $this , 'view' => $v];
-            if ( $d === null )
-                $d = $def;
-            elseif ( !is_array($d) )
-                $d = array_merge($def , [$d]);
-            else
-                $d = array_merge($def , $d);
-
-            return self::$_blade->getBlade()?->run($v , $d);
+        public function signOut() {
+            $sid = self::$_id[ 'sid' ] ?? -1 ;
+            self::$_id = $_SESSION[ '_id' ] = self::NO_LOGIN ;
+            ( new \app\login\wd\AppLoginSystem())->persistSignOut( $sid );
         }
 
-
-
-
-
-
-        public function route($req)
+        private function haveLogin()
         {
-            if ( $req === '/' )
-            {
-                echo $this->view('welcome');
-                return;
-            }
-
-            $uri = \sys\UriUtil::getURIObject($req , $_SERVER[ 'REQUEST_METHOD' ]);
-            if ( $uri === null )
-                return;
-
-            if ( $uri->_base === 'reset' )
-            {
-                self::$_login->resetPasswordLogic($uri);
-                exit;
-            }
-            elseif ( $uri->_base === 'auth' )
-            {
-                $act = $uri->_parts[ 1 ] ?? '';
-                $error = '';
-                switch ( $act )
-                {
-                    case 'cancel':
-                        self::$_login->signOut();
-                        \sys\UriUtil::navigateTo('/portal');
-                        break;
-                    case 'signout' :
-                        self::$_login->signOut();
-                        echo \sys\Blade::getBlade()?->run('login.logout' , []);
-                        break;
-                }
-
-                exit;
-            }
-            elseif ( !self::$_login->haveLogin($uri) )
-            {
-                if ( self::$_login->ViewLoginLogic($uri) !== true )
-                    exit;
-            }
-
-            $this->showContent( $uri ) ;
-
-
-
-
-
+            return self::$_id && is_array(self::$_id) && (self::$_id[ 'sid' ] ?? 0) > 0 && (self::$_id[ 'pid' ] ?? 0) > 0;
         }
+
+        public function getSID() : int
+        {
+            return self::$_id[ 'sid' ] ?? -1;
+        }
+
+        public function getPID() : int
+        {
+            return self::$_id[ 'pid'] ?? -1 ;
+        }
+
+        public function route(): bool {
+
+
+                $uri = \sys\UriUtil::getURIObject($_SERVER['REQUEST_URI'] ?? '' , $_SERVER[ 'REQUEST_METHOD' ]);
+                if ( empty($uri) )
+                    return false;
+
+                if ( empty($uri->_base ))
+                    return $this->ViewPage('pages.welcome' ) ;
+                if ( $uri->_base === 'auth' )
+                    ( new \app\login\wd\AppLoginSystem())->loginTasks( $this , $uri ) ;
+                elseif ( !$this->haveLogin() )
+                    return (new \app\login\wd\AppLoginSystem())->performLogin( $this )  ;
+                else
+                    return false ;
+
+            return true ;
+        }
+
 
 
     }
