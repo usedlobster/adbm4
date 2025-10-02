@@ -12,6 +12,8 @@
         private const NO_LOGIN = [
                 'sid' => 0 , 'pid' => 0 , 'db' => false , 'info' => false ];
 
+        private static ?\app\engine\AppAssetStore $_store = null ;
+
         public function __construct() {
             self::$_id = $_SESSION[ '_id' ] ?? self::NO_LOGIN ;
         }
@@ -62,7 +64,7 @@
                 elseif ( !$this->haveLogin() )
                     return (new \app\login\wd\AppLoginSystem())->performLogin( $this )  ;
                 else
-                    return false ;
+                    return $this->viewModel( $uri ) ;
 
             return true ;
         }

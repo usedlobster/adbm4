@@ -22,7 +22,8 @@
                 darkMode: false,
                 editorAllow: {!! $allow ?? 0 !!},
                 editorMode:  {!! $mode ?? 0 !!} ,
-                changed: false,
+                changed: false ,
+
                 setDark(v) {
                     // persist dark mode
                     localStorage.setItem('dark-mode', v ? 'dark' : 'light');
@@ -41,9 +42,9 @@
                                 let p = +this.editorMode & +this.editorAllow;
                                 if ( this.changed ) {
                                     if (!(v & 1) && (p & 1))
-                                        _wd_postEditorsToForm(form, 1);
+                                        _wd_appendEditorsToForm(form, 1);
                                     else if (!(v & 2) && (p & 2))
-                                       _wd_postEditorsToForm(form, 2);
+                                       _wd_appendEditorsToForm(form, 2);
                                 }
                             } else
                                 v = 0;

@@ -8,6 +8,9 @@
 
         use AppEditorContentSaveTrait;
 
+
+
+
         // fix editor mode
 
         public function secureEditorMode() : bool
@@ -21,7 +24,7 @@
             if ( $allow < 0 )
             {
                 $user = $this->getInfo();
-                $_SESSION[ '_editor_allow' ] = ($allow = ($user[ 'ea' ] ?? 0));
+                $_SESSION[ '_editor_allow' ] = 3 ; // ($allow = ($user[ 'ea' ] ?? 0));
                 $_SESSION[ '_editor_mode' ] = 0;
             }
 
@@ -51,17 +54,6 @@
         }
 
 
-        private function showTemplate( $view , $exp , $pageData)
-        {
-            //
-            $key = $view . ':' .  $exp ;
-            $sys = self::$_store->getAsset($key,1 , false  );
-            if ( !$sys )
-                $sys = '' ;
-
-            echo '[' . $key . ']' ;
-        }
-
         public function ViewBasePage($uri , $model , $pageData)
         {
             try
@@ -81,7 +73,7 @@
                 if ( $b ) {
                     $b->directiveRT('adbm' , function ($exp) use ($view,$pageData) {
 
-                        showADBM( $view , $exp , $pageData ) ;
+
                     });
                     echo $b->run($view , $pageData);
                 }

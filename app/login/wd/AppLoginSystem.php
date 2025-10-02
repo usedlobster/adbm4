@@ -5,8 +5,8 @@
     class AppLoginSystem
     {
 
-        use AppLoginBackEndTrait ;
-        use AppLoginPersistTrait ;
+        use AppLoginBackEndTrait;
+        use AppLoginPersistTrait;
 
         private const array FT_LOGIN_IP    = [1 , [['5 minute' , 30] , ['30 second' , 10]]];
         private const array FT_LOGIN_EMAIL = [2 , [['5 minute' , 10] , ['30 second' , 3]]];
@@ -18,28 +18,23 @@
         // show login pages , until we have [ sid / pid ]
         public function performLogin(\app\AppMaster $app) : bool
         {
-
             if ( $app->getSID() < 1 )
             {
-                if (isset($_COOKIE['_adbm_token_']))
+                if ( isset($_COOKIE[ '_adbm_token_' ]) )
                 {
-                  if (( $sid =   $this->useLoginToken()) > 0 )
-                      $app?->setLogin($sid , 0 , false , false);
+                    if ( ($sid = $this->useLoginToken()) > 0 )
+                        $app?->setLogin($sid , 0 , false , false);
                 }
             }
 
             if ( ($sid = $app->getSID()) < 1 )
             {
-
                 // we need , so show the login form
                 $error = '';
                 if ( isset($_POST[ '_login' ]) && \sys\BladeMan::checkCSRF() )
                 {
-                    $_SESSION['_remember_me_'] = (($_POST['remember_me'] ?? '' ) === 'on' ) ;
-                    $error = $this->attemptLogin($app ,
-                            $_POST[ 'email' ] ?? '' ,
-                            $_POST[ 'password' ] ?? ''
-                    );
+                    $_SESSION[ '_remember_me_' ] = (($_POST[ 'remember_me' ] ?? '') === 'on');
+                    $error = $this->attemptLogin($app , $_POST[ 'email' ] ?? '' , $_POST[ 'password' ] ?? '');
 
 
                     if ( ($sid = $app->getSID()) > 0 )
@@ -70,11 +65,10 @@
                 return $app?->ViewPage('auth.project' , ['error' => $error , 'list' => $projects]);
             }
 
-            return true ;
-
+            return true;
         }
 
-        private function attemptLogin(\app\AppMaster $app , $email , $pwd ) : string
+        private function attemptLogin(\app\AppMaster $app , $email , $pwd) : string
         {
             try
             {
@@ -107,7 +101,7 @@
             if ( $sid < 0 || !is_array($list) || count($list) === 0 )
                 return 'No projects found';
 
-            if ( count($list) === 1    )
+            if ( count($list) === 1 )
                 $pid = $list[ 0 ][ 'pid' ] ?? 0;
             elseif ( $pick > 0 && in_array($pick , array_column($list , 'pid')) )
                 $pid = $pick;
@@ -115,68 +109,53 @@
                 $pid = 0;
 
             $app->setLogin($sid , $pid , false , false);
-            return $pid >= 0 ? '' : 'Invalid Project' ;
-
+            return $pid >= 0 ? '' : 'Invalid Project';
         }
 
-        public function loginTasks( \app\AppMaster $app , object $uri  ) {
-            switch( $uri->_parts[1] ?? false ) {
+        public function loginTasks(\app\AppMaster $app , object $uri)
+        {
+            switch ( $uri->_parts[ 1 ] ?? false )
+            {
                 case 'cancel'  :
-                    $app->setLogin( 0 , 0 , false , false ) ;
-                    $_SESSION['_reset_stage']  = 0 ;
-                    \sys\UriUtil::navigateTo( '/portal' );
-                    break ;
+                    $app->setLogin(0 , 0 , false , false);
+                    $_SESSION[ '_reset_stage' ] = 0;
+                    \sys\UriUtil::navigateTo('/portal');
+                    break;
                 case 'signout' :
-                    $sid = $app?->getSID() ?? 0 ;
-                    if ( $sid > 0 ) {
+                    $sid = $app?->getSID() ?? 0;
+                    if ( $sid > 0 )
+                    {
                         $app?->signOut();
                         $app->ViewPage('auth.signout' , ['uri' => $uri]);
                         exit;
                     }
                     else
-                        \sys\UriUtil::navigateTo( '/' );
+                        \sys\UriUtil::navigateTo('/');
 
 
-                    break ;
+                    break;
                 case 'reset-password'  :
-                    new \app\login\wd\AppLoginResetPassword()->startResetPasswordPage( $app );
-                    break ;
+                    new \app\login\wd\AppLoginResetPassword()->startResetPasswordPage($app);
+                    break;
                 case 'reset-verify-code' :
-                    new \app\login\wd\AppLoginResetPassword()->verifyResetCodePage( $app ) ;
-                    break ;
+                    new \app\login\wd\AppLoginResetPassword()->verifyResetCodePage($app);
+                    break;
                 case 'reset-change' :
-                    new \app\login\wd\AppLoginResetPassword()->changePasswordPage( $app ) ;
-                    break ;
+                    new \app\login\wd\AppLoginResetPassword()->changePasswordPage($app);
+                    break;
                 case 'reset-done' :
-                    new \app\login\wd\AppLoginResetPassword()->resetDonePage( $app ) ;
-                    break ;
+                    new \app\login\wd\AppLoginResetPassword()->resetDonePage($app);
+                    break;
                 default :
-                    $app->ErrorPage( 'error.404'  , 404 , [ 'msg'=> $uri->_path] ) ;
-                    break ;
+                    $app->ErrorPage('error.404' , 404 , ['msg' => $uri->_path]);
+                    break;
             }
 
 
-            exit ;
-
+            exit;
         }
 
         //
 
 
-
     }
-
-    /*
-     *                     $sid = $app?->getSID() ?? 0 ;
-                    if ( $sid > 0 )
-                    {
-                        \sys\Util::saveCookie( '_adbm_token_' , '' , -3600 ) ;
-                        $_SESSION['_remember_me_'] = false ;
-                        new \app\login\wd\AppLoginResetPassword()->clearLoginSessions( $sid ) ;
-                        $app->setLogin(0 , 0 , false , false);
-                        $app->ViewPage('auth.signout' , ['uri' => $uri ]);
-                    }
-
-                    \sys\UriUtil::navigateTo( '/' );
-
-     */
