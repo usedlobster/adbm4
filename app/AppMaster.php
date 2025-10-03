@@ -64,7 +64,7 @@
                 elseif ( !$this->haveLogin() )
                     return (new \app\login\wd\AppLoginSystem())->performLogin( $this )  ;
                 else
-                    return $this->viewModel( $uri ) ;
+                    return $this->ViewModel( $uri ) ;
 
             return true ;
         }
