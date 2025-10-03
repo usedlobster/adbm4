@@ -1,3 +1,4 @@
+<?php $info = $_SESSION['_user_info_'] ?? (isset($app) ? $app->getUserProfile() : []) ?>
 <div class="relative inline-flex justify-between header-icon" x-data="{ open:false }">
     <button
             class="inline-flex justify-start items-center group"
@@ -25,9 +26,9 @@
             x-cloak
     >
         <div class="pt-0.5 pb-2 px-3 mb-1 border-b border-gray-200 dark:border-gray-700/60">
-            <div class="font-bold">{{ $info['dname'] ?? '-'  }}</div>
-            <div class="font-medium">{{ $info['cname'] ?? '-'  }}</div>
-            <div class="text-xs italic">Administrator</div>
+            <div class="font-bold">{{ $info['dispname'] ?? 'Guest'  }}</div>
+            <div class="font-medium">{{ $info['compname'] ?? 'Guest'  }}</div>
+            <div class="text-xs italic">{{ $info['rolename'] ?? 'Guest' }} ({{ $info['level'] ?? '0' }})</div>
         </div>
         <ul>
             <li>

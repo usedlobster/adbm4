@@ -85,7 +85,7 @@
                                                 @foreach( $item['items'] ?? [] as $sub )
                                                     <li class="mb-1 pr-1 last:mb-0">
                                                         <a class="hover:scale-105 hover:font-bold text-xs uncate transitionblock transition truncate"
-                                                           href="{!! $sub['href'] ?? '#'  !!}}">
+                                                           href="{!! $sub['href'] ?? '#'  !!}">
                                                             <div class="flex items-center">
                                                                 <svg class="shrink-0 fill-current w-4 h-4"
                                                                      xmlns="http://www.w3.org/2000/svg"
@@ -126,6 +126,5 @@
                 </button>
             </div>
         </div>
-
     </div>
 </div>
