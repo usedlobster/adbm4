@@ -56,13 +56,13 @@
                                         <!-- icon + text + dropdown -->
                                         <div class="flex items-center justify-between">
                                             <!-- icon -->
-                                            <div class="flex items-center">
+                                            <div class="flex items-center" title="{{$item['title'] ?? '' }}">
                                                 <svg class="shrink-0 text-blue-500 dark:text-green-500 fill-current w-4 h-4"
                                                      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                                     @if ( !( $item['icon'] ?? false ))
                                                         <path d="M3,3V21H21V3"></path> <!-- large square -->
                                                     @else
-                                                        {!! $item['icon'] ?? ''  !!}
+                                                        <path d="{!! $item['icon'] ?? ''  !!}"></path>
                                                     @endif
                                                 </svg>
                                                 <!-- text  -->
@@ -90,14 +90,14 @@
                                                                 <svg class="shrink-0 fill-current w-4 h-4"
                                                                      xmlns="http://www.w3.org/2000/svg"
                                                                      viewBox="0 0 24 24">
-                                                                    @if ( !( $item['icon'] ?? false ))
+                                                                    @if ( !( $sub['icon'] ?? false ))
                                                                         <path d="M10,14V10H14V14H10Z"></path>
                                                                         <!-- small square -->
                                                                     @else
-                                                                        {!! $item['icon'] ?? ''  !!}
+                                                                        <path d="{!! $sub['icon'] ?? ''  !!}"></path>
                                                                     @endif
                                                                 </svg>
-                                                                <span class=" lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">{{$sub['title'] ?? '' }}</span>
+                                                                <span class="lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">{{$sub['title'] ?? '' }}</span>
                                                             </div>
                                                         </a>
                                                     </li>

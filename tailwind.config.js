@@ -25,6 +25,7 @@ module.exports = {
                 '6xl': ['3.750rem', { lineHeight: '1.20', letterSpacing: '-0.02em' }],
             },
             screens: {
+                mobile : '480px',
             },
             minWidth : {
                 15 : '3.75rem' ,

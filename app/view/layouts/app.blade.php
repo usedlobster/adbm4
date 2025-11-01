@@ -1,12 +1,21 @@
 @extends( 'layouts.master' )
 
 @section( 'head' )
+
+    <script src="/js/wd/arrows.min.js?q={{_BUILD}}"></script>
+    <link rel="stylesheet" href="/css/wd/arrows.css?q={{_BUILD}}"
     @if ( ($editable ?? false))
         <script src="/js/wd/editor.min.js?q={{_BUILD}}"></script>
     @endif
 @endsection
 
 @section( 'body' )
+
+    <div id="scroll-arrows">
+        <button id="scroll-top" aria-label="Scroll to top">↑</button>
+        <button id="scroll-bottom" aria-label="Scroll to bottom">↓</button>
+    </div>
+
     @if (( $editable ?? true))
         <form id="_editorModeForm" method="POST" style="">
             <input type="hidden" name="_editorMode" id="_editorModeInput" value="0">
@@ -83,10 +92,7 @@
             }
         }
 
-        window.addEventListener('load', function () {
-            //
 
-        });
     </script>
 
 

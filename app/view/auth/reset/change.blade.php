@@ -106,6 +106,7 @@
                 color: 'bg-gray-500',
                 isvalid: false,
                 init: function () {
+                    // TODO : use internal api - strength meter
                     import('/js/npm/zxcvbn/zxcvbn.js')
                         .then(module => {
                             this.zxcvbn = module.default || module;
@@ -114,6 +115,8 @@
                             this.zxcvbn = null;
                             console.error('Failed to load zxcvbn:', err)
                         });
+
+
                 },
                 checkStrength: function () {
 

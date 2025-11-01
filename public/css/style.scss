@@ -1,8 +1,6 @@
-// @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 @font-face {
   font-family: 'Roboto';
   font-display: swap;
-  /* other properties */
 }
 
 @tailwind base;
@@ -10,7 +8,6 @@
 @tailwind utilities;
 
 @layer base {
-  /* keep */
   html {
     font-family: 'Roboto', sans-serif;
     font-size: 16px;
@@ -18,10 +15,16 @@
 }
 
 @layer utilities {
-
+  @import 'extra/table';
 }
 
 @layer components {
+
+  main {
+    overflow-y: auto;
+    height: 100%;
+    position: relative;
+  }
 
   .bar-button {
     @apply relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md ;
@@ -39,15 +42,15 @@
   }
 
 
-    .button-hover {
+  .button-hover {
 
-      &:hover {
-        @apply transition-all duration-300
-        active:bg-gray-100/70
-        active:transition-colors;
-        @apply hover:bg-gray-50/50 bg-red-500 hover:rounded-md hover:scale-125 hover:shadow;
-      }
+    &:hover {
+      @apply transition-all duration-300
+      active:bg-gray-100/70
+      active:transition-colors;
+      @apply hover:bg-gray-50/50 bg-red-500 hover:rounded-md hover:scale-125 hover:shadow;
     }
+  }
 
 }
 

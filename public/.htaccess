@@ -5,11 +5,13 @@
   </IfModule>
 
 RewriteEngine On
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 RewriteRule ^(favicon.ico|robots.txt)$ - [L]
-RewriteRule ^(css|img|js|api|raw|api) - [L]
-# RewriteRule ^global+ /boot/global.php [L]
-RewriteRule ^(boot) - [L]
+RewriteRule ^(boot|css|img|js|raw) - [L]
+RewriteRule ^api/v /boot/apiboot.php [L]
 RewriteRule ^ /boot/boot.php [L]
+
 </IfModule>
 
 

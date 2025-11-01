@@ -40,13 +40,14 @@
                 $plain = sodium_crypto_secretbox_open($ciphertext, $nonce, $k );
                 return $plain;
             }
-            catch (\Throwable $ex )
+            catch (\Throwable )
             {
             }
 
             return false ;
         }
 
+        // secure as in digits are well distributed , so unlikely guessable !
         public static function SecureCode( ) : string {
             $chars = '123456789ABCD';
             $bytes = random_bytes(8);
@@ -54,8 +55,8 @@
             $maxMultiple = intdiv(255, 13) * 13 - 1; // 247
             for ($i = 0; $i < 8; $i++) {
                 do {
-                    $byte = ord($bytes[$i]);
-                } while ($byte > $maxMultiple);
+                    $byte = ord( $bytes[$i] );
+                } while ($byte > $maxMultiple );
 
                 if ( $i == 4 )
                     $code .= '-' ;

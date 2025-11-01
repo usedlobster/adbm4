@@ -7,6 +7,7 @@
 
         use AppLoginBackEndTrait;
         use AppLoginPersistTrait;
+        use AppLoginApiTrait;
 
         private const array FT_LOGIN_IP    = [1 , [['5 minute' , 30] , ['30 second' , 10]]];
         private const array FT_LOGIN_EMAIL = [2 , [['5 minute' , 10] , ['30 second' , 3]]];

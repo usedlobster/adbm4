@@ -1,0 +1,57 @@
+.wd-data-table-form {
+
+
+
+
+  @apply overflow-x-auto;
+
+  .wd-table-data {
+    @apply w-full ;
+  }
+
+  .wd-topbar {
+    @apply flex justify-between items-center gap-2 m-1 ;
+
+    .wd-search {
+      @apply w-full min-w-48 max-w-384 bg-white dark:bg-black ;
+    }
+
+    .wd-pagelen {
+      @apply bg-white dark:bg-black ;
+    }
+
+    .wd-pageopts-btn {
+      @apply w-10 h-10 bg-blue-300 text-white dark:bg-green-300 border shadow-lg dark:text-black;
+    }
+  }
+
+
+  table {
+
+      th {
+
+        @apply p-1 truncate  text-center bg-cyan-800/90 text-gray-200;
+
+        &.sort {
+          @apply bg-green-500/80 dark:bg-blue-500/80;
+        }
+        &.colpick {
+          @apply bg-red-500/30 dark:bg-red-500/70;
+        }
+
+
+      }
+
+      td {
+        @apply p-1 truncate border-gray-200 border ;
+        &.colpick {
+          @apply bg-red-600/30 dark:bg-red-600/70;
+        }
+        &.sort {
+          @apply bg-green-500/10 dark:bg-blue-500/90;
+        }
+
+      }
+
+  }
+}

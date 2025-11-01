@@ -764,6 +764,12 @@ html{
   width:100%
 }
 
+@media (min-width: 480px){
+  .container{
+    max-width:480px
+  }
+}
+
 @media (min-width: 640px){
   .container{
     max-width:640px
@@ -792,6 +798,12 @@ html{
   .container{
     max-width:1536px
   }
+}
+
+main{
+  overflow-y:auto;
+  height:100%;
+  position:relative
 }
 
 .bar-button{
@@ -974,6 +986,10 @@ html{
 
 .z-40{
   z-index:40
+}
+
+.m-0{
+  margin:0px
 }
 
 .m-1{
@@ -1186,6 +1202,10 @@ html{
   min-width:6rem
 }
 
+.min-w-6{
+  min-width:1.5rem
+}
+
 .min-w-80{
   min-width:20rem
 }
@@ -1211,12 +1231,20 @@ html{
   flex:1 1 0%
 }
 
+.flex-shrink{
+  flex-shrink:1
+}
+
 .flex-shrink-0{
   flex-shrink:0
 }
 
 .shrink-0{
   flex-shrink:0
+}
+
+.flex-grow{
+  flex-grow:1
 }
 
 .grow{
@@ -1271,6 +1299,10 @@ html{
 
 .resize-none{
   resize:none
+}
+
+.resize{
+  resize:both
 }
 
 .appearance-none{
@@ -1845,6 +1877,118 @@ html{
 
 .ease-out{
   transition-timing-function:cubic-bezier(0, 0, 0.2, 1)
+}
+
+.wd-data-table-form{
+  overflow-x:auto
+}
+
+.wd-data-table-form .wd-table-data{
+  width:100%
+}
+
+.wd-data-table-form .wd-topbar{
+  margin:0.25rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.5rem
+}
+
+.wd-data-table-form .wd-topbar .wd-search{
+  width:100%;
+  min-width:12rem;
+  max-width:96rem;
+  --tw-bg-opacity:1;
+  background-color:rgb(255 255 255 / var(--tw-bg-opacity))
+}
+
+.wd-data-table-form .wd-topbar .wd-search:where(.dark, .dark *){
+  --tw-bg-opacity:1;
+  background-color:rgb(0 0 0 / var(--tw-bg-opacity))
+}
+
+.wd-data-table-form .wd-topbar .wd-pagelen{
+  --tw-bg-opacity:1;
+  background-color:rgb(255 255 255 / var(--tw-bg-opacity))
+}
+
+.wd-data-table-form .wd-topbar .wd-pagelen:where(.dark, .dark *){
+  --tw-bg-opacity:1;
+  background-color:rgb(0 0 0 / var(--tw-bg-opacity))
+}
+
+.wd-data-table-form .wd-topbar .wd-pageopts-btn{
+  height:2.5rem;
+  width:2.5rem;
+  border-width:1px;
+  --tw-bg-opacity:1;
+  background-color:rgb(147 197 253 / var(--tw-bg-opacity));
+  --tw-text-opacity:1;
+  color:rgb(255 255 255 / var(--tw-text-opacity));
+  --tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
+  box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)
+}
+
+.wd-data-table-form .wd-topbar .wd-pageopts-btn:where(.dark, .dark *){
+  --tw-bg-opacity:1;
+  background-color:rgb(134 239 172 / var(--tw-bg-opacity));
+  --tw-text-opacity:1;
+  color:rgb(0 0 0 / var(--tw-text-opacity))
+}
+
+.wd-data-table-form table th{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  background-color:rgb(21 94 117 / 0.9);
+  padding:0.25rem;
+  text-align:center;
+  --tw-text-opacity:1;
+  color:rgb(229 231 235 / var(--tw-text-opacity))
+}
+
+.wd-data-table-form table th.sort{
+  background-color:rgb(34 197 94 / 0.8)
+}
+
+.wd-data-table-form table th.sort:where(.dark, .dark *){
+  background-color:rgb(59 130 246 / 0.8)
+}
+
+.wd-data-table-form table th.colpick{
+  background-color:rgb(239 68 68 / 0.3)
+}
+
+.wd-data-table-form table th.colpick:where(.dark, .dark *){
+  background-color:rgb(239 68 68 / 0.7)
+}
+
+.wd-data-table-form table td{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  border-width:1px;
+  --tw-border-opacity:1;
+  border-color:rgb(229 231 235 / var(--tw-border-opacity));
+  padding:0.25rem
+}
+
+.wd-data-table-form table td.colpick{
+  background-color:rgb(220 38 38 / 0.3)
+}
+
+.wd-data-table-form table td.colpick:where(.dark, .dark *){
+  background-color:rgb(220 38 38 / 0.7)
+}
+
+.wd-data-table-form table td.sort{
+  background-color:rgb(34 197 94 / 0.1)
+}
+
+.wd-data-table-form table td.sort:where(.dark, .dark *){
+  background-color:rgb(59 130 246 / 0.9)
 }
 
 .\[a-zA-Z0-9\:-\]{

@@ -6,6 +6,8 @@
     {
         /* back end operations on our login system */
 
+
+
         private function setPassword(int $sid , string $password) : bool
         {
             try
@@ -62,8 +64,17 @@
 
 
         // can sid ,, use pr9oject pid ( on $db )
-        private function canUseProject(int $sid , int $pid , $db = false) : bool
+        protected function canUseProject(int $sid , int $pid , $db = false) : bool
         {
+
+            $red = \sys\Util::getRedis();
+            if ( $red ) {
+                $key = 'canuseprj:'.$sid.':'.$pid;
+                if ( $red->exists($key) )
+                    return true ;
+            }
+
+
             if ( $sid > 0 && $pid > 0 )
             {
                 $db = $db ?: $db = \sys\db\SQL::Get0(" select db from <DB>.sys_projects where pid = ? and active > 0 " , [$pid]);
@@ -83,10 +94,47 @@
                                                                                 (p.`upto` is NULL or p.`upto` < NOW())
                                                                       SQL, [$sid , $pid]) === $sid
                 )
+                {
+                    if ( $red )
+                        $red->setex($key , 90 , 1);
                     return true;
+                }
+
             }
             return false;
         }
+
+
+        public function getUserProjectInfo(int $sid , int $pid , $db = false) : array | bool
+        {
+
+
+            if ( $sid > 0 && $pid > 0 )
+            {
+                $db = $db ?: $db = \sys\db\SQL::Get0(" select db from <DB>.sys_projects where pid = ? and active > 0 " , [$pid]);
+
+                if ( $db )
+                    $row = \sys\db\SQL::RowN(/** @lang sql */ <<<SQL
+                                SELECT  u.sid , p.pid , p.db , u.cid , u.level , u.ea , u.opt1 , u.opt2 , u.opt3 , u.opt4  
+                                  FROM <DB>.sys_sid2pid as s2p
+                                  LEFT JOIN <DB>.sys_projects as p ON ( p.pid = s2p.pid )
+                                  LEFT JOIN {$db}.users as u ON ( u.sid = s2p.sid )
+                                  LEFT JOIN {$db}.comps as c ON ( c.cid = u.cid )
+                                  WHERE s2p.sid = ? AND
+                                        s2p.pid = ? AND
+                                        p.active > 0 AND
+                                        u.active > 0 AND
+                                        c.active > 0 AND
+                                        (p.`from` is NULL or p.`from` > NOW() ) and
+                                        (p.`upto` is NULL or p.`upto` < NOW())
+                                SQL, [$sid , $pid]) ;
+
+                if ( $row && is_array($row) && empty( \sys\db\SQL::error() ))
+                    return $row ;
+            }
+            return false;
+        }
+
 
         public function getUserProjectsAvailable($sid) : array
         {

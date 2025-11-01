@@ -50,6 +50,21 @@
             return self::$_id[ 'pid'] ?? -1 ;
         }
 
+        public function generateBearer() {
+
+            $sid = self::$_id['sid'] ?? -1 ;
+            $pid = self::$_id['pid'] ?? -1 ;
+            $ttl = 5 ;
+            if ( $sid > 0 && $pid > 0 )
+                return \sys\SecureToken::encrypt(\serialize([
+                        'v'=>'V4' ,
+                        'sid' => $sid ,
+                        'pid' => $pid ,
+                        'ttl'=> $ttl  ,
+                        'exp' => time() + $ttl ]) , 'BTOKEN');
+            return '' ;
+        }
+
         public function route(): bool {
 
 
