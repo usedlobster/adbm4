@@ -125,7 +125,7 @@
                         this.warn = '-';
                     } else {
                         let result = this.zxcvbn.zxcvbn(this.pwd1);
-                        console.log(this.pwd1, result);
+
                         this.warn = result.feedback.warning || result.feedback.suggestions[0];
                         this.score = result.score;
                     }

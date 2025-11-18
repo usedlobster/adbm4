@@ -1,32 +1,52 @@
+class wdDataTableForm {
 
-class wdDataTableForm
-{
+    constructor(cfg, action) {
 
-    constructor( cfg   ) {
+        if (!cfg )
+            throw new Error('config is required');
 
-        if ( !cfg || !cfg.id )
-            throw new Error('config is missing or invalid ');
+        if ( !cfg.id )
+            throw new Error('config.id is required');
 
-        this.TFC = document.getElementById( cfg.id )
-        if (!this.TFC )
-            throw new Error('container not found' ) ;
+        this.T0 = document.getElementById( cfg?.id);
+        if (!this.T0)
+            throw new Error('no table/ element found');
 
-        this.TFC.replaceChildren() ;
-        this.TFC.className = 'wd-data-table-form' ;
-
-
-        // create the table if we have config for one
-        this.wdTable = (cfg?.table && (typeof wdDataTable   !== 'undefined')) ? new wdDataTable( cfg  ) : null;
+        this.T0.className = 'wd-data-table-form'; //
 
 
+        this.wdTable = null ;
+        if ( cfg?.table ) {
+            if (typeof wdDataTable !== 'undefined') {
+                this.wdTable = new wdDataTable('T' + cfg.id, cfg?.options, cfg.table, action );
+            }
+        }
 
 
+        this.T0.replaceChildren() ;
+        if ( this.wdTable )
+            this.T0.appendChild( this.wdTable.attach() );
+        // if ( this.wdForm )
+        //    this.T0.appendChild( this.wdForm.render());
 
 
+        /*
+        this.wdForm = null ;
+        if ( cfg?.form ) {
+            if (typeof wdDataForm !== 'undefined') {
+                this.wdForm = new wdDataForm( 'F' + cfg.id, cfg?.options, cfg.form, action);
+            }
+        }
 
+         */
+
+        //this.T0.replaceChildren() ;
+        //if ( this.wdTable )
+        //    this.T0.appendChild( this.wdTable.T0);
 
 
 
     }
+
 
 }

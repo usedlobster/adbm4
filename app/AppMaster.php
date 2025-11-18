@@ -73,7 +73,16 @@
                     return false;
 
                 if ( empty($uri->_base ))
-                    return $this->ViewPage('pages.welcome' ) ;
+                {
+                    if ( !($this->haveLogin()))
+                        return $this->ViewPage('pages.welcome');
+                    else
+                        \sys\UriUtil::navigateTo( '/portal' ) ;
+
+                    return false ;
+                }
+
+
                 if ( $uri->_base === 'auth' )
                     ( new \app\login\wd\AppLoginSystem())->loginTasks( $this , $uri ) ;
                 elseif ( !$this->haveLogin() )

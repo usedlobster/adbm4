@@ -1,7 +1,6 @@
 @extends( 'layouts.master' )
 
 @section( 'head' )
-
     <script src="/js/wd/arrows.min.js?q={{_BUILD}}"></script>
     <link rel="stylesheet" href="/css/wd/arrows.css?q={{_BUILD}}"
     @if ( ($editable ?? false))

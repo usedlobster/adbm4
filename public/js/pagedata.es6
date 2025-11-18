@@ -1,5 +1,5 @@
 
-        console.log('editor ');
+
         window.addEventListener('load', function () {
         const editor = grapesjs.init({
         // ...

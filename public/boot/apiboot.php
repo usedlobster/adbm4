@@ -10,8 +10,6 @@ try
         if ( $parts[2] === 'v0'  )
         {
             $file = __DIR__ . '/../../api/v0/' . $parts[3] . '.php';
-            //if ( file_exists($file) )
-            //{
             @ require_once($file);
             exit;
         }

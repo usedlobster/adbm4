@@ -1,3 +1,4 @@
+
 class ScrollArrows {
     constructor() {
         this.scrollArrows = document.getElementById('scroll-arrows');
@@ -63,7 +64,7 @@ class ScrollArrows {
 
         // Calculate if we can scroll in either direction
         const canScrollUp = scrollTop > 10; // Small threshold for better UX
-        const canScrollDown = scrollTop < (scrollHeight - clientHeight - 10);
+        const canScrollDown = scrollTop < (scrollHeight - clientHeight - 10 );
 
         // Update arrows visibility
         this.topButton.classList.toggle('hidden', !canScrollUp);

@@ -106,7 +106,6 @@
             $sLimit  = $this->getLimit( $payload);
             $sOrder  = $this->getOrder($this->dc , $payload);
             $nFilter = $this->dc->getCount(['w' => [$sFilter]]);
-
             $req = ['f' => $sFields , 'w' => [$sFilter] , 'o' => [$sOrder] , 'l' => $sLimit] ;
             $data = $this->dc->getAll($req);
 
