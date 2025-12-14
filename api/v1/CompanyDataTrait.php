@@ -14,7 +14,6 @@
             if ( !($db = $user[ 'db' ] ?? false) )
                 return false;
 
-
             $dc = new \sys\db\SqlSource();
             $dcx =$dc->db($db)
                     ->col('c.cid')
@@ -44,13 +43,7 @@
 
 
             $dcx->prepare();
-            $result = new \app\model\ApiDataFetch( $dc )->getList( $payload ) ;
-
-
-
-            header( 'Content-Type: application/json');
-            echo json_encode( $result ?? false );
-            exit ;
+            return new \app\model\ApiDataFetch( $dc )->getList( $payload ) ;
         }
 
 

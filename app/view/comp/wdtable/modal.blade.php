@@ -76,7 +76,7 @@
     <!-- Modal footer -->
     <div class="flex items-center border-t border-default space-x-4 pt-3 justify-end  gap-2">
         <div class="flex gap-1 flex-wrap">
-            <button class="bg-non e button-hover sm:mr-12" @click="action('close') " title="Close without saving">
+            <button class="bg-none button-hover sm:mr-12" @click="action('close') " title="Close without saving">
                 Cancel
             </button>
             <button class="bg-gray-200 button-hover" @click="action('reset')" title="Reset to default view">

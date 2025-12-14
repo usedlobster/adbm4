@@ -5,7 +5,7 @@ window.addEventListener('load', function () {
         b[0].style.display = 'block';
     }
 
-    if ( typeof ScrollArrows !== 'undefined')
+    if (typeof ScrollArrows !== 'undefined')
         window.scrollArrows = new ScrollArrows();
 
 });
@@ -135,11 +135,9 @@ async function _wd_fetch(url, options) {
 }
 
 
-
 let _globalRefreshPromise = null;
 
 _wd_api_token = async (url, payload, token, updateTokenCB = null) => {
-
 
     async function _make_request_(url, payload, token) {
 
@@ -157,6 +155,7 @@ _wd_api_token = async (url, payload, token, updateTokenCB = null) => {
             },
             body: JSON.stringify(payload)
         });
+
         return response;
     }
 
@@ -180,28 +179,109 @@ _wd_api_token = async (url, payload, token, updateTokenCB = null) => {
     try {
         // Make initial request
         const response = await _make_request_(url, payload, token);
-
         // If unauthorized, try to refresh token
-        if (response.status === 401) {
+        if ( response?.status === 401) {
             const refreshResult = await _refresh_token_(token);
-
-            // If refresh successful, retry original request with new token
             if (refreshResult?.token) {
                 if (updateTokenCB) {
                     updateTokenCB(refreshResult.token);
                 }
-                return _make_request_(url, payload, refreshResult.token);
+                return await _make_request_(url, payload, refreshResult.token);
             }
 
-            // If refresh failed, redirect to login
-            window.location.href = '/portal';
-            return null;
         }
 
         return response;
+
     } catch (e) {
         console.error('API request failed:', e);
         throw e;
     }
+
+
 }
 
+
+function _wd_makeBlock(base, name, tag = 'div', updateCB = null) {
+
+    let n = ( base?.id ?? 'block') + '-' + name;
+    let E = base.querySelector('#' + n);
+    if (!E) {
+
+        E = document.createElement(tag);
+        E.id = n;
+
+        base.appendChild(E);
+        if (updateCB)
+            updateCB(E, true);
+        return;
+    }
+
+    if (!E)
+        throw new Error('failed to create dom block ' + this.domid + '_' + name);
+
+    if (updateCB)
+        updateCB(E, false);
+
+}
+
+function _wd_makeModal(updateCB = null) {
+
+    _wd_makeBlock(this.T1, 'modal', 'div', (E, init) => {
+
+        const removeModal = (T) => {
+            // remove modal
+            if (T) {
+                const M = T.firstChild;
+                if (M && M.actionFn)
+                    M.actionFn('close');
+                T?.remove()
+            }
+        }
+
+
+        E.replaceChildren();
+        E.className = 'wd-modal overflow-hidden';
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape')
+                removeModal(E);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target === E)
+                removeModal(E);
+        });
+
+
+        const M = document.createElement('div');
+        M.className = 'wd-modal-content';
+        if (updateCB)
+            updateCB(M);
+
+        E.appendChild(M);
+    });
+
+
+}
+
+document.addEventListener('alpine:init', () => {
+    // Magic: $tooltip
+
+    Alpine.magic('tooltip', el => message => {
+
+        let instance = tippy(el, {content: message, trigger: 'manual'})
+
+        instance.show()
+
+        setTimeout(() => {
+            instance.hide()
+
+            setTimeout(() => instance.destroy(), 150)
+        }, 2000)
+    })
+
+    // // Directive: x-tooltip
+    // Alpine.directive('tooltip', (el, {expression}) => {
+    //     tippy(el, {content: expression})
+    // })
+})

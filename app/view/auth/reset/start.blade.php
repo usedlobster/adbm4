@@ -1,9 +1,13 @@
 @extends('layouts.auth')
+@section( 'meta-head' )
+    <meta name="description" content="Request a password reset">
+@endsection
 @section('content')
 
     @include( 'snip.logo-head', ['title'=>'Reset Password'] )
     @include( 'snip.error-block' , ['error'=> $error ?? false ])
-    @include( 'snip.info-block' , [ 'info'=> 'Enter the email address of the account'] )
+    @include( 'snip.info-block' , [ 'info'=> 'Enter the email address that you usually use to sign in with to continue. We will then ask for a security code, so you can reset your password.
+If you have not received a code recently and your account is still active, we will send a new code to your email address shortly.'] )
 
 
 
@@ -11,7 +15,7 @@
         @csrf
         <div class="rounded-md shadow-sm space-y-4">
 
-            @include( 'snip.email-input' , ['id'=>'email' , 'label'=>'Email' , 'value'=>$_POST['email'] ?? '' ])
+            @include( 'snip.email-input' , ['id'=>'email' , 'label'=>'Email Address' , 'value'=>$_POST['email'] ?? '' ])
 
         </div>
 

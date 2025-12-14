@@ -1,38 +1,41 @@
 class wdDataTable {
 
+
     constructor(id, opts, cfg, action = null) {
 
         // cre
         this.T1 = document.createElement('div');
         this.T1.id = this.domid = id;
         if (!this.T1)
-            throw new Error('wdDataTable: Could not create table element') ;
+            throw new Error('wdDataTable: Could not create table container') ;
 
         this.setup(opts, cfg, action);
-        this.loadColumnDefs() ;
-
-
+        this.loadColumnDefs();
 
         this.savecfg = false;
         this.hpick = -1;
 
     }
 
+    _debouncedFetch = _wd_debounce(() => {
+        this.fetchPage();
+    }, 200);
+
     fetchSoon = () => {
         if (this.TBL)
             this.TBL.style.opacity = '0.7';
 
-        _wd_debounce(() => {
-            this.fetchPage();
-        }, 200)();
-
+        this._debouncedFetch();
     }
 
 
-    attach() {
+
+    attach(show = true) {
 
         if (this.T1)
             this.T1.replaceChildren();
+        else
+            return;
 
         const resizeFunction = _wd_debounce((entries) => {
             let w = entries[0].contentRect.width;
@@ -42,7 +45,7 @@ class wdDataTable {
             }
         }, 200);
 
-        this.T1.style.opacity=  '0.0' ;
+        this.T1.style.opacity = '0.0';
         try {
             this.upd.all = true;
             this.updateDOM()
@@ -50,9 +53,8 @@ class wdDataTable {
             this.resizeObserver.observe(this.T1);
             this.upd.all = true;
             this.fetchSoon();
-        }
-        finally {
-            this.T1.style.opacity=  '1' ;
+        } finally {
+            this.T1.style.opacity = show ? '1' : '0';
         }
         return this.T1;
     }
@@ -64,12 +66,11 @@ class wdDataTable {
     }
 
 
+    setup(opts, cfg, action) {
 
-        setup(opts, cfg, action) {
-
-        this.opts     = opts ?? {} ;
-        this.cfg      = cfg = ( cfg || this.cfg ) ;
-        this.actionCB = ( action || this.actionCB ) ;
+        this.opts = opts ?? {};
+        this.cfg = cfg = (cfg || this.cfg);
+        this.actionCB = (action || this.actionCB);
 
 
         this.upd = {
@@ -102,18 +103,15 @@ class wdDataTable {
             data: []
         }
 
-        this.uuid = '_wd_tblkey_' + this.domid + '_' + (cfg?.version ?? '0') ;
+        this.uuid = '_wd_tblkey_' + this.domid + '_' + (cfg?.version ?? '0');
         this.highlighter = (typeof TextHighlighter !== 'undefined') ? new TextHighlighter({className: 'wd-highlight'}) : null;
         this.hpick = -1; // no header currently picked
         this.view.pageLength = 5;
 
 
-
-
-
     }
 
-    loadColumnDefs (  ) {
+    loadColumnDefs() {
         if (!this?.cfg?.columns)
             throw new Error('no columns defined');
 
@@ -138,22 +136,22 @@ class wdDataTable {
                 exp: c?.exp || true
             }
         }
-        if ( this.uuid )
-            this.loadTableFromMeta( this.uuid  ) ;
+        if (this.uuid)
+            this.loadTableFromMeta(this.uuid);
     }
 
-    loadTableFromMeta( lkey ) {
+    loadTableFromMeta(lkey) {
 
-        let cfg = this?.cfg ;
-        if ( !cfg )
-            return ;
+        let cfg = this?.cfg;
+        if (!cfg)
+            return;
 
 
         let jdef = localStorage.getItem(lkey);
         this.defcfg = jdef ? JSON.parse(jdef) : false;
 
-        if ( !this.defcfg ||  this.defcfg?.defs?.length !== this.ncols)
-            return ;
+        if (!this.defcfg || this.defcfg?.defs?.length !== this.ncols)
+            return;
 
         let dup = [];
         let z = 0;
@@ -166,10 +164,10 @@ class wdDataTable {
 
                     z += (j + 1);
                     this.colOrder[i] = j;
-                    if ( d?.name !== null ) this.colHead[j] = d.name;
-                    if ( d?.size !== null ) this.coldefs[j].size = d.size;
-                    if ( d?.vis  !== null ) this.coldefs[j].vis = d.vis;
-                    if ( d?.exp  !== null ) this.coldefs[j].exp = d.exp;
+                    if (d?.name !== null) this.colHead[j] = d.name;
+                    if (d?.size !== null) this.coldefs[j].size = d.size;
+                    if (d?.vis !== null) this.coldefs[j].vis = d.vis;
+                    if (d?.exp !== null) this.coldefs[j].exp = d.exp;
                 }
             })
 
@@ -181,69 +179,10 @@ class wdDataTable {
     }
 
 
-    makeBlock(base, name, tag = 'div', updateCB = null) {
-
-        let n = this.domid + '-' + name;
-        let E = base.querySelector('#' + n);
-        if (!E) {
-
-            E = document.createElement(tag);
-            E.id = n;
-
-            base.appendChild(E);
-            if (updateCB)
-                updateCB(E, true);
-            return;
-        }
-
-        if (!E)
-            throw new Error('failed to create dom block ' + this.domid + '_' + name);
-
-        if (updateCB)
-            updateCB(E, false);
-
-    }
-
-    makeModal(updateCB = null) {
-
-        this.makeBlock(this.T1, 'modal', 'div', (E, init) => {
-
-            const removeModal = ( T ) => {
-                // remove modal
-                if ( T ) {
-                    const M = T.firstChild;
-                    if (M && M.actionFn)
-                        M.actionFn('close');
-                    T?.remove()
-                }
-            }
 
 
-            E.replaceChildren();
-            E.className = 'wd-modal overflow-hidden';
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape')
-                    removeModal(E ) ;
-            });
 
-            document.addEventListener('click', (e) => {
-                if (e.target === E)
-                    removeModal( E ) ;
-            });
-
-
-            const M = document.createElement('div');
-            M.className = 'wd-modal-content';
-            if (updateCB)
-                updateCB(M);
-
-            E.appendChild(M);
-        });
-
-
-    }
-
-    fillMetaFromTable( d ) {
+    fillMetaFromTable(d) {
 
         let defs = []
         for (let i = 0; i < this.ncols; i++) {
@@ -257,40 +196,40 @@ class wdDataTable {
             });
         }
 
-        d.data.title = this.cfg?.title  ?? '';
+        d.data.title = this.cfg?.title ?? '';
         d.data.defs = defs;
     }
 
 
-    createOptionsModal( template_name ) {
+    createOptionsModal(template_name) {
 
         this.makeModal((M) => {
 
-           if ( !( M instanceof HTMLDivElement))
+            if (!(M instanceof HTMLDivElement))
                 throw new Error('invalid modal element not a div : ' + template_name);
 
-            const tempnode = document.getElementById( template_name );
-            if ( !tempnode )
-                throw new Error('template not found : ' + template_name );
+            const tempnode = document.getElementById(template_name);
+            if (!tempnode)
+                throw new Error('template not found : ' + template_name);
 
             const frag = tempnode.content.cloneNode(true);
-            if ( !frag )
-                throw new Error('failed to clone template : ' + template_name );
+            if (!frag)
+                throw new Error('failed to clone template : ' + template_name);
 
             let refreshMeta = () => {
                 let d = Alpine.$data(M);
                 this.fillMetaFromTable(d);
-                this.upd.all = true ;
-                this.updateDOM() ;
+                this.upd.all = true;
+                this.updateDOM();
             }
 
 
-            if ( !M.actionFn ) {
-                M.actionFn = ( act , k , v ) => {
+            if (!M.actionFn) {
+                M.actionFn = (act, k, v) => {
 
-                    switch( act ) {
+                    switch (act) {
                         case 'init' : {
-                            
+
                             let d = Alpine.$data(M);
                             this.fillMetaFromTable(d);
                             localStorage.setItem(this.uuid + '_undo', JSON.stringify(d.data));
@@ -298,12 +237,12 @@ class wdDataTable {
                         }
                         case 'close' :
 
-                            if ( M && M.parentElement )
-                                M.parentElement.remove() ;
-                            return ;
+                            if (M && M.parentElement)
+                                M.parentElement.remove();
+                            return;
                         case 'name' :
                             if (k >= 0 && k < this.ncols) {
-                                if ( typeof v === 'string' )
+                                if (typeof v === 'string')
                                     this.colHead[this.colOrder[k]] = v;
                             }
                             break;
@@ -336,34 +275,32 @@ class wdDataTable {
                         case 'title' :
                             if (typeof v === 'string')
                                 this.cfg.title = v;
-                            break ;
+                            break;
                         case 'undo' :
-                            this.loadTableFromMeta( this.uuid + '_undo' )
-                            this.loadColumnDefs() ;
-                            break ;
+                            this.loadTableFromMeta(this.uuid + '_undo')
+                            this.loadColumnDefs();
+                            break;
                         case 'reset' :
-                            localStorage.removeItem( this.uuid ) ;
-                            this.loadColumnDefs() ; 
-                            break ;
+                            localStorage.removeItem(this.uuid);
+                            this.loadColumnDefs();
+                            break;
                         case 'apply':
 
-                            let d = Alpine.$data(M)      ;
-                            this.fillMetaFromTable(d) ;
+                            let d = Alpine.$data(M);
+                            this.fillMetaFromTable(d);
 
-                            localStorage.setItem( this.uuid , JSON.stringify( d.data ) ) ;
-                            this.loadColumnDefs() ;
-                            refreshMeta(M) ;
-                            if ( M && M.parentElement )
-                                M.parentElement.remove() ;
-                            break ;
+                            localStorage.setItem(this.uuid, JSON.stringify(d.data));
+                            this.loadColumnDefs();
+                            refreshMeta(M);
+                            if (M && M.parentElement)
+                                M.parentElement.remove();
+                            break;
                     }
-                    refreshMeta(M) ;
+                    refreshMeta(M);
                 }
             }
 
             const xdata = "{ data: {} , init() { return this.$root.actionFn( 'init' ) } , action( t , k , v ) { this.$root.actionFn(t,k,v)} }";
-
-
             M.setAttribute('x-data', xdata);
             M.appendChild(frag);
 
@@ -373,13 +310,13 @@ class wdDataTable {
     }
 
     updateTitleBlock() {
-        this.makeBlock(this.T1, 'titleblock', 'div', (E, init) => {
+        _wd_makeBlock(this.T1, 'titleblock', 'div', (E, init) => {
             if (init)
                 E.className = 'wd-section wd-titleblock';
 
             if (init || this.ref.title) {
 
-                this.makeBlock(E, 'title', 'h1', (T, isnew) => {
+                _wd_makeBlock(E, 'title', 'h1', (T, isnew) => {
                     if (isnew)
                         T.className = 'wd-title';
                     T.textContent = this.cfg?.title ?? '';
@@ -394,63 +331,61 @@ class wdDataTable {
 
     updateQBarTypeBar(QBAR, q) {
 
-        if ( q?.list) {
+        if (q?.list) {
 
             q.list.forEach((item, i) => {
                 let B = document.createElement('button');
                 B.className = 'wd-qbar-item';
-                console.log( 'qq' , q.value , i )
-                if ( q?.value === i )
+                console.log('qq', q.value, i)
+                if (q?.value === i)
                     B.classList.add('active');
                 B.textContent = item;
                 B.addEventListener('click', (e) => {
                     q.value = i;
-                    this.fetchSoon() ;
+                    this.fetchSoon();
                 });
                 QBAR.appendChild(B);
             })
-        }
-        else
-            throw new Error('empty qbar list' ) ;
+        } else
+            throw new Error('empty qbar list') ;
 
     }
 
     updateQbarBlock() {
 
-        if ( this.cfg?.qbar  ) {
-            this.makeBlock(this.T1, 'qbarblock', 'div', (E, init) => {
+        if (this.cfg?.qbar) {
+            _wd_makeBlock(this.T1, 'qbarblock', 'div', (E, init) => {
                 if (init)
                     E.className = 'wd-section flex flex-wrap wd-qbarblock';
                 else
                     E.replaceChildren();
 
                 if (init || this.ref.qbar) {
-                    if ( Array.isArray( this.cfg.qbar ) ) {
-                        this.cfg.qbar.forEach( (q,i) => {
-                            this.makeBlock(E, 'qbar' + i , 'div', (QBAR, isnew) => {
+                    if (Array.isArray(this.cfg.qbar)) {
+                        this.cfg.qbar.forEach((q, i) => {
+                            _wd_makeBlock(E, 'qbar' + i, 'div', (QBAR, isnew) => {
                                 if (isnew)
                                     QBAR.className = 'wd-qbar';
                                 else
                                     QBAR.replaceChildren();
 
-                                if ( !(q?.name))
-                                    q.name = 'qbar_' + i ;
+                                if (!(q?.name))
+                                    q.name = 'qbar_' + i;
 
 
-                                if ( q?.value === undefined )
-                                    q.value = q?.default ?? false ;
+                                if (q?.value === undefined)
+                                    q.value = q?.default ?? false;
 
                                 // draw each qbar item block
-                                switch( q.type ) {
+                                switch (q.type) {
                                     case 'bar' :
-                                        this.updateQBarTypeBar( QBAR , q ) ;
+                                        this.updateQBarTypeBar(QBAR, q);
                                         break;
                                     default:
                                         throw new Error('unknown qbar type : ' + q.type);
                                 }
 
                                 E.appendChild(QBAR);
-
                             })
                         })
                     }
@@ -465,7 +400,7 @@ class wdDataTable {
 
     updatePageLengthControl(E) {
 
-        this.makeBlock(E, 'pagelength', 'select', (Q, init) => {
+        _wd_makeBlock(E, 'pagelength', 'select', (Q, init) => {
             if (init) {
                 Q.className = 'wd-pagelength';
                 Q.addEventListener('change', (e) => {
@@ -506,7 +441,7 @@ class wdDataTable {
     }
 
     updatePageSearchControl(E) {
-        this.makeBlock(E, 'pagesearch', 'input', (Q, init) => {
+        _wd_makeBlock(E, 'pagesearch', 'input', (Q, init) => {
             if (init) {
                 Q.type = 'text';
                 Q.className = 'wd-pagesearch';
@@ -525,13 +460,13 @@ class wdDataTable {
 
     updatePageOptionsControl(E) {
 
-        this.makeBlock(E, 'optionbutton', 'button', (Q, init) => {
+        _wd_makeBlock(E, 'optionbutton', 'button', (Q, init) => {
 
             if (init) {
                 Q.className = 'wd-pageoptions';
                 Q.type = 'button';
                 Q.textContent = '⚙';
-                Q.addEventListener('click', () => this.createOptionsModal( this.cfg?.modal ?? 'modal_options' ));
+                Q.addEventListener('click', () => this.createOptionsModal(this.cfg?.modal ?? 'modal_options'));
             }
 
 
@@ -543,7 +478,7 @@ class wdDataTable {
 
     updateTopBlock() {
 
-        this.makeBlock(this.T1, 'topblock', 'div', (E, init) => {
+        _wd_makeBlock(this.T1, 'topblock', 'div', (E, init) => {
             if (init)
                 E.className = 'wd-section wd-topblock';
 
@@ -569,20 +504,20 @@ class wdDataTable {
     }
 
     updateTableColgroupControl(E) {
-        this.makeBlock(E, 'colgroup', 'colgroup', (Q, init) => {
+        _wd_makeBlock(E, 'colgroup', 'colgroup', (Q, init) => {
             if (init)
                 Q.className = 'wd-colgroup';
             else
                 Q.replaceChildren();
 
-            if ( this?.cfg?.multi) {
+            if (this?.cfg?.multi) {
                 let COLPICK = document.createElement('col');
                 COLPICK.style.width = '24px';
                 Q.appendChild(COLPICK);
             }
 
             for (let i = 0; i < this.ncols; i++) {
-                let COL = document.createElement( 'col' ) ;
+                let COL = document.createElement('col');
                 if (!COL) {
                     COL = document.createElement('col');
                     Q.appendChild(COL);
@@ -626,7 +561,7 @@ class wdDataTable {
 
 
     updateTableTableHead(E) {
-        this.makeBlock(E, 'thead', 'thead', (Q, init) => {
+        _wd_makeBlock(E, 'thead', 'thead', (Q, init) => {
             if (init)
                 Q.className = 'wd-thead';
             else
@@ -634,16 +569,16 @@ class wdDataTable {
 
 
             let TR = document.createElement('tr');
-            if ( this?.cfg?.multi ) {
+            if (this?.cfg?.multi) {
                 let TH = document.createElement('th');
-                if ( this?.cfg?.multihead ) {
+                if (this?.cfg?.multihead) {
                     const I = document.createElement('input');
                     I.type = 'checkbox';
                     TH.appendChild(I);
                     I.addEventListener('change', (e) => {
-                        this.picked_all = !this.picked_all ?? true ;
-                        if ( !this.picked )
-                            this.picked = [] ;
+                        this.picked_all = !this.picked_all ?? true;
+                        if (!this.picked)
+                            this.picked = [];
 
 
                     })
@@ -709,17 +644,35 @@ class wdDataTable {
         let j = this.colOrder[col] ?? col;
         let cdef = this.coldefs[j];
         let v = rowdata[j];
-        if (cdef?.type) {
-            switch (cdef.type) {
 
-                case 'iso-date-str':
-                    if (v)
-                        v = new Date(v).toLocaleDateString();
-                    break;
-                case 'boolean' :
-                    v = (v === true || v === 'true' || v === 1) ? 'Yes' : 'No';
-                    break;
-            }
+        switch (cdef?.type) {
+
+            case 'iso-date-str':
+                if (v)
+                    v = new Date(v).toLocaleDateString();
+                TD.classList.add('wd-right-align');
+                break;
+            case 'boolean' :
+                TD.classList.add('wd-center-align');
+                v = (v === true || v === 'true' || v === 1) ? '✓' : '✕';
+                break;
+            case 'button' :
+                const B = document.createElement('button');
+                B.className = "w-fit px-2 py-1 rounded-md bg-blue-500 text-white";
+                B.textContent = 'View';
+                /*
+                B.addEventListener('click', (e) => {
+                    this.actionCB('T', 'view', v, rowdata);
+                })
+
+                 */
+                TD.classList.add('wd-right-align')
+                TD.appendChild(B);
+                return;
+
+            default:
+                break;
+
         }
 
         if (this.view.search !== '' && cdef?.searchable && this.highlighter)
@@ -731,7 +684,7 @@ class wdDataTable {
     }
 
     updateTableTableBody(E) {
-        this.makeBlock(E, 'tbody', 'tbody', (Q, init) => {
+        _wd_makeBlock(E, 'tbody', 'tbody', (Q, init) => {
             if (init)
                 Q.className = 'wd-tbody';
 
@@ -740,12 +693,11 @@ class wdDataTable {
                 let TR = document.createElement('tr');
                 let rowdata = this.view.data?.[r] ?? false;
                 if (rowdata) {
-                    if ( this?.cfg?.multi )
-                    {
+                    if (this?.cfg?.multi) {
                         let TD = document.createElement('td');
-                        let I = document.createElement( 'input' ) ;
+                        let I = document.createElement('input');
                         I.type = 'checkbox';
-                        I.checked = this.view?.picked?.[r] ?? false ;
+                        I.checked = this.view?.picked?.[r] ?? false;
                         TD.appendChild(I);
                         TR.appendChild(TD);
                     }
@@ -767,7 +719,7 @@ class wdDataTable {
     }
 
     updateTableTableFoot(E) {
-        this.makeBlock(E, 'tfoot', 'tfoot', (Q, init) => {
+        _wd_makeBlock(E, 'tfoot', 'tfoot', (Q, init) => {
             if (init)
                 Q.className = 'wd-tfoot';
             this.ref.tfoot = false;
@@ -779,12 +731,12 @@ class wdDataTable {
     }
 
     updatePageInfoControl(E) {
-        this.makeBlock(E, 'pageinfo', 'div', (Q, init) => {
+        _wd_makeBlock(E, 'pageinfo', 'div', (Q, init) => {
             if (init)
                 Q.className = 'wd-pageinfo';
 
             if (this.ref.pageInfo) {
-                this.makeBlock(Q, 'pageinfo-text', 'span', (T, isnew) => {
+                _wd_makeBlock(Q, 'pageinfo-text', 'span', (T, isnew) => {
                     if (isnew)
                         T.className = 'wd-pageinfo-text';
                     T.textContent = 'Page ' + this.view.page + ' of ' + this.view.npages + ' (' + this.view.nrows + ' rows)';
@@ -857,7 +809,7 @@ class wdDataTable {
 
         }
 
-        this.makeBlock(E, 'pagepager', 'nav', (Q, init) => {
+        _wd_makeBlock(E, 'pagepager', 'nav', (Q, init) => {
             if (init)
                 Q.className = 'wd-pagelist';
 
@@ -886,7 +838,7 @@ class wdDataTable {
 
 
     updateTableBlock() {
-        this.makeBlock(this.T1, 'tableblock', 'table', (E, init) => {
+        _wd_makeBlock(this.T1, 'tableblock', 'table', (E, init) => {
 
             this.TBL = E;
 
@@ -915,7 +867,7 @@ class wdDataTable {
     }
 
     updateBotBlock() {
-        this.makeBlock(this.T1, 'botblock', 'div', (E, init) => {
+        _wd_makeBlock(this.T1, 'botblock', 'div', (E, init) => {
             if (init)
                 E.className = 'wd-section wd-botblock';
 
@@ -936,7 +888,7 @@ class wdDataTable {
 
         if (this.upd.all) {
             this.upd.titleBlock = true;
-            this.upd.qblock   = true ;
+            this.upd.qblock = true;
             this.upd.topBlock = true;
             this.upd.tableBlock = true;
             this.upd.botBlock = true;
@@ -952,14 +904,13 @@ class wdDataTable {
             this.updateTitleBlock();
 
 
-        if ( this.upd.qblock ) {
-            this.ref.qbar = true ;
-            this.upd.qblock = false ;
+        if (this.upd.qblock) {
+            this.ref.qbar = true;
+            this.upd.qblock = false;
         }
 
-        if ( this.ref.qbar )
-            this.updateQbarBlock() ;
-
+        if (this.ref.qbar)
+            this.updateQbarBlock();
 
 
         if (this.upd.topBlock) {
@@ -1058,12 +1009,14 @@ class wdDataTable {
                 offset: (this.view.offset < 0) ? 0 : this.view.offset,
                 limit: this.view.pageLength,
                 col: this.coldefs,
-                qbar: this.cfg?.qbar.map( (q) => ({ t:q.type , n:q.name , v:q.value })  )
+                qbar: this.cfg?.qbar.map((q) => ({t: q.type, n: q.name, v: q.value}))
             }
 
 
             const ajx = this.cfg?.ajax;
-            if (ajx && ajx.url && ajx.token) {
+
+            if (ajx && ajx.url ) {
+                ajx.token = this.cfg?.token ;
 
                 (async (req) => {
 

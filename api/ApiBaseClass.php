@@ -9,7 +9,7 @@
     {
         public function __construct() {}
 
-        private function sendUnauthorized() : never
+        protected function sendUnauthorized() : never
         {
             header('HTTP/1.1 401 Unauthorized');
             header('Content-Type: application/json');
@@ -17,6 +17,22 @@
                     'status' => 401 ,
                     'error' => 'Invalid or expired authentication token'
             ]);
+            exit;
+        }
+
+        protected function sendError($e) : never
+        {
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => (string)$e->getMessage()]);
+            exit;
+        }
+
+        protected function sendResult( $result  ) : never
+        {
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode( $result ) ;
             exit;
         }
 
@@ -51,26 +67,25 @@
             catch ( \Throwable  $ex )
             {
                 // throw new \Exception('Bearer token error');
+
             }
-            return false;;
+            return false;; // not error , but not a valid bearer token
         }
 
         private function getUserFromBearerID($id) : array|bool
         {
             try
             {
-                if ( is_array($id) &&
-                    $id[ 'v' ] === 'V4' &&
-                    (($sid = $id[ 'sid' ] ?? 0) > 0) &&
-                    (($pid = $id[ 'pid' ] ?? 0) > 0) )
+                if (
+                        is_array($id) && $id[ 'v' ] === 'V4' && (($sid = $id[ 'sid' ] ?? 0) > 0) && (($pid = $id[ 'pid' ] ?? 0) > 0)
+                )
                 {
                     $red = \sys\Util::getRedis(1);
                     if ( $red )
                     {
                         $s = $red->get(($rkey = 'user:'.$sid.':'.$pid));
                         if ( $s )
-                            return \unserialize($s) ;
-
+                            return \unserialize($s);
                     }
 
                     $uinf = (new AppLoginSystem())->getUserProjectInfo($sid , $pid , false);
@@ -87,45 +102,9 @@
         }
 
 
-        public function getValidUser()
-        {
-            try
-            {
-                $id   = $this->getBearerID();
-                if ( is_array($id) && $id[ 'v' ] === 'V4' )
-                {
-                    $exp = ($id[ 'exp' ] ?? 0);
-                    $left = $exp > 0 ? ($exp - time()) : 0;
-                    if ( $left > -5 )
-                    {
-                        $user = $this->getUserFromBearerID($id);
-                        if ( $user )
-                            return $user;
-                    }
-                }
-            }
-            catch ( \Throwable )
-            {
-            }
-
-            $this->sendUnauthorized();
-        }
-
-        public function getRefreshToken() {
 
 
-            $id   = $this->getBearerID();
-            $exp  = ($id[ 'exp' ] ?? 0);
-            $left = $exp > 0 ? ($exp - time()) : 0;
-            if ( $left > -7200  )
-            {
-                $user = $this->getUserFromBearerID($id);
-                if ( $user ) {
 
-                }
-
-            }
-        }
 
 
 

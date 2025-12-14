@@ -46,11 +46,7 @@
                 {
                     sleep(0 ) ;
                     $this->_pdo = null ;
-                    // echo 'Database connection error: ' . $e->getMessage() ;
-                    error_log( $e ) ;
-                    echo '<h1>Database connection error</h1>' ;
-                    echo '<h2>Please try again in a few minutes</h2>' ;
-                    echo '<a href="/">Home</a>' ;
+                    http_response_code(503) ;
                     exit ;
                 }
             }
