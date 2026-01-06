@@ -1,0 +1,21 @@
+
+.wd-adbm-form {
+
+  .wd-form {
+    @apply block text-sm font-medium text-gray-700;
+  }
+
+  .wd-label {
+    @apply block text-lg font-medium text-gray-700 ;
+  }
+  .wd-input {
+    @apply mt-1 block w-full rounded-md disabled:border-none disabled:bg-gray-100 disabled:text-gray-500
+
+  }
+
+  .wd-form-small-button {
+    @apply transition-all duration-300;
+    @apply inline-flex border bg-blue-50 border-blue-500 px-2 py-1 hover:scale-110 hover:bg-blue-200;
+  }
+
+}

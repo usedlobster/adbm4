@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+    RewriteRule ^(boot) - [L]
+    RewriteRule ^ /boot/api.php [L]
+</IfModule>
+<IfModule !mod_rewrite.c>
+    Error "mod_rewrite is required"
+</IfModule>

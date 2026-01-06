@@ -1,122 +1,64 @@
-window.addEventListener('load', function () {
+document.addEventListener('alpine:init', () => {
 
-    let b = document.getElementsByTagName('body');
-    if (b && b[0]) {
-        b[0].style.display = 'block';
-    }
+    Alpine.data('adbmPage', () => {
+        return {
+            sidebarOpen     : false ,
+            sidebarExpanded : false ,
+            darkMode : undefined ,
 
-    if (typeof ScrollArrows !== 'undefined')
-        window.scrollArrows = new ScrollArrows();
+            setDarkMode( on ) {
 
-});
+                if ( on === true ) {
+                    if ( this.darkMode !== true ) {
+                        localStorage.setItem('dark-mode', 'dark');
+                        document.body.classList.add('dark');
+                        this.darkMode = true;
+                    }
+                }
+                else {
+                    if ( this.darkMode !== false ) {
+                        localStorage.setItem('dark-mode', '');
+                        document.body.classList.remove('dark');
+                        this.darkMode = false;
+                    }
+                }
+            } ,
+            init: function () {
+                this.setDarkMode( localStorage.getItem( 'dark-mode') === 'dark' )
+                this.sidebarExpanded = localStorage.getItem('sidebar-expanded') == 'true';
+                this.$watch('sidebarExpanded', value => localStorage.setItem('sidebar-expanded', value));
+                this.sidebarOpen = localStorage.getItem('sidebar-open') == 'true';
+                this.$watch('sidebarOpen', value => localStorage.setItem('sidebar-open', value));
+            }
 
+        }
+    })
+})
 
-//
-function _wd_debounce(func, delay) {
+function _wd_debounce(func, delay, delay2 = null) {
 
     let timeout = null;
+    let slow = 0;
     return function (...args) {
         const context = this;
-        if (timeout)
+
+        if (timeout) {
             clearTimeout(timeout);
+            slow++;
+        }
 
         timeout = setTimeout(() => {
             func.apply(context, args);
-        }, delay);
-    };
-}
-
-/*
-function _wd_check_for_double_click( e , func_1 , func_2 , delay = 500 ) {
-    let lastCall = 0;
-    return function (...args) {
-        const now = Date.now();
-        if (now - lastCall < delay) {
-            func_2.apply(this, args);
-        } else {
-            func_1.apply(this, args);
-        }
-        lastCall = now;
-    }
-}
-*/
-
-function _wd_check_double_click_event(e, singleClickFn, doubleClickFn, delay = 400) {
-    let s = _wd_check_double_click_event;  // aesthetic shorthand
-
-    // Initialize static properties
-    if (!s.lastClickTime) {
-        s.lastClickTime = 0;
-    }
-
-    if (!s.clickTimeout) {
-        s.clickTimeout = null;
-    }
-
-    const tDiff = e.timeStamp - s.lastClickTime;
-
-
-    if (tDiff < delay && tDiff > 0) {  // Added positive check
-        // Double click detected
-
-        if (s.clickTimeout) {
-            clearTimeout(s.clickTimeout);
-            s.clickTimeout = null;
-        }
-        s.lastClickTime = 0;  // Reset timestamp
-        doubleClickFn(e);
-    } else {
-        // Potential single click
-
-        if (s.clickTimeout) {
-            clearTimeout(s.clickTimeout);
-        }
-        s.lastClickTime = e.timeStamp;
-        s.clickTimeout = setTimeout(() => {
-
-            singleClickFn(e);
-            s.clickTimeout = null;
-            s.lastClickTime = 0;  // Also reset timestamp after single click executes
-        }, delay);
-    }
-}
-
-function _wd_throttle(func, delay) {
-
-    let lastCall = 0;
-    let timeout = null;
-
-    return function (...args) {
-
-        const now = Date.now();
-        // save context ( this ) for setTimeout to call original function
-        const context = this;
-
-        // If enough time has passed since the last call, schedule now
-        if (now - lastCall >= delay) {
-            if (timeout) {
-                clearTimeout(timeout);
-                timeout = null;
-            }
-
-            lastCall = now;
-            func.apply(context, args);
-        }
-        // Otherwise, schedule the execution if not already scheduled
-        else if (!timeout) {
-            timeout = setTimeout(() => {
-                lastCall = Date.now();
-                func.apply(context, args);
-                timeout = null;
-            }, delay - (now - lastCall));
-        }
+            slow = 0;
+            timeout = null; // not strictly necessary
+        }, ((delay2 != null && slow > 2) ? delay2 : delay));
     };
 }
 
 async function _wd_fetch(url, options) {
     const controller = new AbortController();
-    const timeout = options.timeout || 5000;
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const timeout = options.timeout || 10000;
+    const timeoutId = setTimeout(() => controller.abort( new Error( 'timeout' )), timeout);
     try {
         const response = await fetch(url, {
             ...options,
@@ -126,7 +68,7 @@ async function _wd_fetch(url, options) {
     } catch (e) {
         // Handle abort/timeout errors
         if (e.name === 'AbortError') {
-            console.warn('Request timed out');
+            console.warn('Request timed out:' , e);
         }
         throw e; // Rethrow the error to be handled by caller
     } finally {
@@ -134,154 +76,55 @@ async function _wd_fetch(url, options) {
     }
 }
 
-
-let _globalRefreshPromise = null;
-
-_wd_api_token = async (url, payload, token, updateTokenCB = null) => {
-
-    async function _make_request_(url, payload, token) {
-
-        const response = await fetch(url, {
-            timeout: 12500,
+async function apiFetch(url, token, payload = {}, callBack = null, isRetry = false) {
+    try {
+        let response = await _wd_fetch(url, {
             method: 'POST',
-            mode: 'cors',
-            cache: 'no-cache',
-            credentials: 'same-origin',
-            redirect: 'follow',
-            referrerPolicy: 'no-referrer',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         });
 
-        return response;
-    }
+        if (response.status === 401 && !isRetry) {
+            // Try to refresh via the PHP backend
+            const refreshRes = await _wd_fetch(window.Auth.refreshUrl || '/auth/refresh-token', { method: 'POST' });
 
-    async function _refresh_token_(token) {
-        if (!_globalRefreshPromise) {
-            _globalRefreshPromise = fetch('/api/v1/refresh-token', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + token
-                },
-                timeout: 12500
-            })
-                .then(response => response.json())
-                .finally(() => {
-                    _globalRefreshPromise = null;
-                });
-        }
-        return _globalRefreshPromise;
-    }
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                const newToken = data.access_token;
 
-    try {
-        // Make initial request
-        const response = await _make_request_(url, payload, token);
-        // If unauthorized, try to refresh token
-        if ( response?.status === 401) {
-            const refreshResult = await _refresh_token_(token);
-            if (refreshResult?.token) {
-                if (updateTokenCB) {
-                    updateTokenCB(refreshResult.token);
-                }
-                return await _make_request_(url, payload, refreshResult.token);
+                // Update Global state if it exists
+                if (window.Auth)
+                    window.Auth.token = newToken;
+
+                // IMPORTANT: Pass the NEW token into the retry
+                return apiFetch(url, newToken, payload, callBack, true);
             }
-
         }
 
-        return response;
+        if (!response.ok) throw new Error(`API_ERROR: ${response.status}`);
+
+        const json = await response.json();
+
+        // Return both the data AND the potentially updated token
+        // so the calling class (like wdDataTable) can update its config
+        const result = { data: json, newToken: isRetry ? token : null };
+
+        if (callBack) return callBack(result);
+        return result;
 
     } catch (e) {
-        console.error('API request failed:', e);
+        if (callBack) return callBack({ error: e.message });
         throw e;
     }
-
-
 }
 
 
-function _wd_makeBlock(base, name, tag = 'div', updateCB = null) {
-
-    let n = ( base?.id ?? 'block') + '-' + name;
-    let E = base.querySelector('#' + n);
-    if (!E) {
-
-        E = document.createElement(tag);
-        E.id = n;
-
-        base.appendChild(E);
-        if (updateCB)
-            updateCB(E, true);
-        return;
-    }
-
-    if (!E)
-        throw new Error('failed to create dom block ' + this.domid + '_' + name);
-
-    if (updateCB)
-        updateCB(E, false);
-
-}
-
-function _wd_makeModal(updateCB = null) {
-
-    _wd_makeBlock(this.T1, 'modal', 'div', (E, init) => {
-
-        const removeModal = (T) => {
-            // remove modal
-            if (T) {
-                const M = T.firstChild;
-                if (M && M.actionFn)
-                    M.actionFn('close');
-                T?.remove()
-            }
-        }
 
 
-        E.replaceChildren();
-        E.className = 'wd-modal overflow-hidden';
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape')
-                removeModal(E);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (e.target === E)
-                removeModal(E);
-        });
 
 
-        const M = document.createElement('div');
-        M.className = 'wd-modal-content';
-        if (updateCB)
-            updateCB(M);
-
-        E.appendChild(M);
-    });
 
 
-}
-
-document.addEventListener('alpine:init', () => {
-    // Magic: $tooltip
-
-    Alpine.magic('tooltip', el => message => {
-
-        let instance = tippy(el, {content: message, trigger: 'manual'})
-
-        instance.show()
-
-        setTimeout(() => {
-            instance.hide()
-
-            setTimeout(() => instance.destroy(), 150)
-        }, 2000)
-    })
-
-    // // Directive: x-tooltip
-    // Alpine.directive('tooltip', (el, {expression}) => {
-    //     tippy(el, {content: expression})
-    // })
-})

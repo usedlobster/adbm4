@@ -243,7 +243,7 @@
 
         public function getCount(array $xp = [])
         {
-            $sql = $this->getSQL(['s' => " SELECT COUNT(*)"] + $xp);
+            $sql = $this->getSQL(['s' => " SELECT COUNT(*) "] + $xp);
             return SQL::Get0($sql[ 0 ] ?? '0' , $sql[ 1 ] ?? []);
         }
 

@@ -9,16 +9,21 @@
     {
 
         private string|false        $_dberror;
-        private string              $_dsn;
+        private ?string             $_dsn;
         private ?PDO                $_pdo;
-        private                     $_db;
+        private ?string             $_db;
         private \PDOStatement|false $_stmt;
+
+
+        const DB_TOKENS = [ '<DB>','<DB_FAIL>' ] ;
+        const DB_TABLES = [ 'adbm4_master','adbm4_master.sys_fail'] ;
+
 
         public function __construct()
         {
             $this->_dberror = false;
-            $this->_dsn = false;
-            $this->_db = false;
+            $this->_dsn = null ;
+            $this->_db =  null ;
             $this->_pdo = null;
         }
 
@@ -27,8 +32,12 @@
         {
             if ( empty($this->_dsn) )
             {
-                $db = $this->_db ?? 'adbm4_master';
-                $this->_dsn = "mysql:host=127.0.0.8;port=8001;dbname={$db};charset=utf8mb4";
+                $db = $this->_db ?? $_ENV['DB_MASTER'] ?? self::DB_TABLES[0] ?? false ;
+                if ( !$db )
+                    throw new \Exception('No database selected');
+                $this->_dsn = str_replace( '<DB>' , $db ,
+                        $_ENV['DB_DSN'] ?? "mysql:host=127.0.0.8;port=8001;dbname=<DB>;charset=utf8mb4" ) ;
+
                 $this->_pdo = null ;
             }
 
@@ -36,27 +45,27 @@
             {
                 try
                 {
-                    $this->_pdo = new PDO($this->_dsn , 'adbm4' , $_ENV['DB_PASS'] , [
-                            PDO::ATTR_PERSISTENT => true ,
-                            PDO::ATTR_EMULATE_PREPARES => false ,
-                            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-                    ]);
+                    $this->_pdo = new PDO($this->_dsn , $_ENV['DB_USER'] ?? 'adbm4' , $_ENV['DB_PASS'] ,
+                            [
+                                PDO::ATTR_PERSISTENT => true ,
+                                PDO::ATTR_EMULATE_PREPARES => false ,
+                                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+                            ]);
                 }
-                catch ( PDOException $e )
+                catch ( \PDOException $e) {
+                    $this->_pdo = null ;
+                    throw $e ;
+                }
+                catch ( \Throwable $e )
                 {
-                    sleep(0 ) ;
                     $this->_pdo = null ;
                     http_response_code(503) ;
-                    exit ;
                 }
             }
 
 
             return $this->_pdo;
         }
-
-        const DB_TOKENS = ['<DB>','<DB_FAIL>' ] ;
-        const DB_TABLES = ['adbm4_master','adbm4_master.sys_fail'] ;
 
         private function _exec($qry , $args) : bool
         {
@@ -131,6 +140,33 @@
         public function Exec($sql , $args = []) : bool
         {
             return ($this->_exec($sql , $args));
+        }
+
+        public function LockExec( $qry , $args =[] , $lock= '') {
+
+            $this->_dberror = false;
+            try
+            {
+                if ( !empty( $lock ) )
+                {
+                    try
+                    {
+                        $pdo = $this->_pdo ? : $this->makePDO();
+                        $pdo->exec( 'LOCK TABLES ' . $lock );
+                        return $this->Exec( $qry , $args );
+                    }
+                    finally
+                    {
+                        $pdo->exec( 'UNLOCK TABLES' );
+                    }
+                }
+                else
+                    return $this->Exec( $qry , $args );
+            }
+            catch ( PDOException $e )
+            {
+                $this->_dberror = $e->getMessage() ?? true ;
+            }
         }
 
         public function Insert($sql , $args = [])

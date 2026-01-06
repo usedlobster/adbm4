@@ -6,9 +6,9 @@ You or somebody else has requested a password reset code, for your ADBM account.
 
 To reset your password, please enter this verification code:
 
-# %[code]%
+# %[otp]%
 
-If you're not at the reset code page, you can access it again by clicking the "Reset password" link on the main login page and entering your email
+If you're not at the reset code page, you can access it again by clicking the "Reset password" link on the login page and entering your account name again.
 
 This code will expire in about 10 minutes to ensure the security of your account.
 After this time, you will need to request a new code.

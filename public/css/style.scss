@@ -8,56 +8,22 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    font-family: 'Roboto', sans-serif;
-    font-size: 16px;
-  }
+  @import 'wd/base';
+  @import 'wd/adbm' ;
 }
 
 @layer utilities {
-  @import 'extra/table';
+  @import 'wd/extra' ;
+  @import 'wd/form'  ;
+  @import 'wd/table' ;
+
+
 }
 
 @layer components {
-
-  main {
-    overflow-y: auto;
-    height: 100%;
-    position: relative;
-  }
-
-  .abutton {
-    @apply focus:outline-none w-24 h-12;
-  }
-
-  .bar-button {
-    @apply relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md ;
-    & {
-      @apply text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
-    }
-
-    &.red {
-      @apply text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
-    }
-
-    &:disabled {
-      @apply bg-gray-500;
-    }
-  }
-
-
-
-  .button-hover {
-
-    &:hover {
-      @apply transition-all duration-300
-      active:bg-gray-100/70
-      active:transition-colors;
-      @apply hover:bg-gray-50/50 bg-red-500 hover:rounded-md hover:scale-125 hover:shadow;
-    }
-  }
-
+  @import 'wd/components';
 }
+
 
 [x-cloak=""] {
   display: block;

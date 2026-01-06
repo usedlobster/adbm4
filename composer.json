@@ -12,22 +12,22 @@
   ],
   "autoload": {
     "psr-4": {
+      "api\\": "api",
       "app\\": "app",
-      "sys\\": "sys",
-      "api\\": "api"
+      "sys\\": "sys"
     }
   },
   "require": {
-    "php": ">=8.4",
-    "ext-curl": "*",
-    "ext-openssl": "*",
-    "ext-redis": "*",
-    "ext-sodium": "*",
-    "ext-zend-opcache": "*",
-    "bjeavons/zxcvbn-php": "^1.4",
-    "eftec/bladeone": "^4.19",
+    "php": ">=8.5",
+    "eftec/bladeone": ">=4.19.1",
+    "vlucas/phpdotenv": "^5.6",
     "phpmailer/phpmailer": "^6.10",
-    "vlucas/phpdotenv": "^5.6"
+    "ext-sodium": "*",
+    "ext-curl": "*",
+    "ext-redis": "*",
+    "ext-pdo": "*",
+    "ext-xdebug": "*",
+    "ext-zend-opcache": "*"
   },
   "config": {
     "optimize-autoloader": true,

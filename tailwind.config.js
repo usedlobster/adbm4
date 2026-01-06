@@ -9,15 +9,13 @@ module.exports = {
     darkMode: [ 'selector' ],
     theme: {
         extend: {
-            fontFamily: {
-                'roboto': ['Roboto', 'sans-serif'],
-            },
+
             fontSize: {
-                  xs   : ['0.750rem', { lineHeight: '1.50' }],
-                  sm   : ['0.875rem', { lineHeight: '1.60' }],
+                xs   : ['0.750rem', { lineHeight: '1.50' }],
+                sm   : ['0.875rem', { lineHeight: '1.60' }],
                 base : ['1,000rem', { lineHeight: '1.50', letterSpacing: '-0.01em' }],
-                  lg : ['1.125rem', { lineHeight: '1.50', letterSpacing: '-0.01em' }],
-                  xl : ['1.250rem', { lineHeight: '1.40', letterSpacing: '-0.01em' }],
+                lg : ['1.125rem', { lineHeight: '1.50', letterSpacing: '-0.01em' }],
+                xl : ['1.250rem', { lineHeight: '1.40', letterSpacing: '-0.01em' }],
                 '2xl': ['1.500rem', { lineHeight: '1.33', letterSpacing: '-0.01em' }],
                 '3xl': ['1.888rem', { lineHeight: '1.33', letterSpacing: '-0.01em' }],
                 '4xl': ['2.250rem', { lineHeight: '1.25', letterSpacing: '-0.02em' }],

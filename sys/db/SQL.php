@@ -8,6 +8,7 @@
      * @method static GetAllN( string $sql , string[] $array )
      * @method static error() : string
      * @method static Exec(string $string , array $array = [] )
+     * @method static LockExec(string $string , array $array = [] , string $lock = '')
      */
     class SQL
     {
