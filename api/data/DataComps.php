@@ -2,14 +2,20 @@
 
     namespace api\data;
 
-    class DataComps {
+    class DataComps extends DataApiBase {
+
+
+
 
 
         public function run( $payload , $parts ) {
 
+
             switch( $payload->act ) {
                 case 'list' :
-                    return $this->listComps( $payload ) ;
+
+                    break ;
+
 
             }
         }

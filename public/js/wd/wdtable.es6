@@ -46,6 +46,7 @@ class wdDataTable {
             if (cdef) {
                 this.col.order[i] = cdef?.order ?? i;
                 this.col.defs[i] = {
+                    field: k ,
 
                 }
 
