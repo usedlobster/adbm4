@@ -1,1 +1,0 @@
-<script src="/js/wd/wdtable.min.js"></script>

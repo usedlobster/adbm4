@@ -1,0 +1,59 @@
+.wd-adbm-form {
+
+  .form-panel {
+    @apply mb-2 bg-gray-100 rounded-md p-2 ;
+  }
+
+  .wd-form {
+    @apply block text-sm font-medium text-gray-700;
+  }
+
+  .wd-label {
+    @apply block text-sm font-bold  text-gray-700 ;
+  }
+
+  .wd-input {
+    @apply mt-1 block w-full rounded-md disabled:border-none disabled:bg-gray-100 disabled:text-gray-500 shadow-lg;
+  }
+
+  .wd-input-error {
+    @apply border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500 ;
+  }
+
+  .wd-select {
+    @apply mt-1 block w-full rounded-md disabled:border-none disabled:bg-gray-100 disabled:text-gray-500
+  }
+
+
+
+}
+
+.info-block {
+
+  @apply rounded-md p-4 border border-l-4 shadow-md;
+
+  .svg-icon {
+    @apply w-8 h-8;
+  }
+
+  .closebtn {
+    @apply focus:outline-none focus:ring-2  focus:ring-offset-2 rounded-md;
+  }
+
+  &.error {
+    @apply bg-red-50  border-red-400;
+    .info-text {
+      @apply text-black ;
+    }
+
+    .close-btn {
+      @apply text-red-400 hover:text-red-600 focus:ring-red-500 ;
+    }
+
+
+  }
+
+  .info-text {
+    @apply text-xs py-1;
+  }
+}

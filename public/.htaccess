@@ -1,7 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(boot|img|css|js) - [L]
-    RewriteRule ^ /boot/boot.php [L]
+    RewriteRule ^\. - [F]
+    RewriteCond %{REQUEST_URI} ^/([^/.]+\.[^/.]+)$
+    RewriteRule ^ - [L]
+    RewriteRule ^(boot|css|img|js)/ - [L]
+    RewriteRule ^ /boot/app-boot.php [L]
 </IfModule>
 <IfModule !mod_rewrite.c>
     Error "mod_rewrite is required"

@@ -1,0 +1,35 @@
+.wd-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+  z-index: 1000;
+
+}
+
+.wd-modal-visible {
+  opacity: 1;
+}
+
+.wd-modal-content {
+  background-color: #00cece;
+  padding: 15px;
+  border-radius: 5px;
+  position: relative;
+  min-width: 75%;
+  min-height: 75%;
+  transform: scale(0.7);
+  transition: transform 0.3s ease-in-out;
+}
+
+.wd-modal-visible .wd-modal-content {
+  transform: scale(1);
+}
+

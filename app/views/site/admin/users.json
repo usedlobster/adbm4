@@ -1,0 +1,17 @@
+{
+  "table": {
+    "ajax"  : { "url": "https://api.usedlobster.test/api/v1/table/users" } ,
+    "title" : "List of Users" ,
+    "columns": [
+      { "field" : "sid"    , "title" : "ID"       , "width": 2 } ,
+      { "field" : "level"  , "title" : "Level"    , "width": 2 },
+      { "field" :  "uname" , "title" : "Username" , "width": 10 },
+      { "field" :  "fname" , "title" : "Firstname" , "width": 10 },
+      { "field" :  "lname" , "title" : "Lastname"  , "width": 10 },
+      { "field" :  "role" , "title" : "Role"  , "width": 10      },
+      { "field" :  "ccode" , "title" : "Code"     , "width": 1   } ,
+      { "field" :  "cname" , "title" : "Company"  , "width": 20   }
+
+    ]
+  }
+}

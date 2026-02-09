@@ -1,7 +1,6 @@
 <?php
 
     namespace sys\wd\Email;
-    use \sys\wd\Email\Parsedown;
 
     /**
      * The wdScript class is responsible for processing and parsing wdScript content.
@@ -48,7 +47,7 @@
                 '>' => [ 'p' => -9 ] ,
                 '>=' => [ 'p' => -9 ] ,
                 '&&' => [ 'p' => -14 ] ,
-                '||' => [ 'p' => -15 ] ,
+                '||' => [ 'p' => -14 ] ,
                 '++' => [ 'u' => true , 'up' => 0 ] , // postfix so a++
                 ':=' => [ 'p' => -100 , 'a' => 1 ] ,  // assignment
                 'let' => [ 'u' => true , 'up' => 0 ] ,
@@ -118,6 +117,10 @@
                     }
                     // and skip this aswell
                     $id++;
+                }
+                else if ( $m === "\"\"")
+                {
+                    $buf .= '"' ;
                 }
                 else
                     $buf .= $m;

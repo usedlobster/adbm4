@@ -1,7 +1,7 @@
 <?php
-    
+
     namespace sys\db;
-    
+
     /**
      * @method static Get0( string $param  , string[] $array )
      * @method static GetAll0( string $sql , string[] $array )
@@ -12,17 +12,17 @@
      */
     class SQL
     {
-        protected static ?SQLPDO $instance = null ;
-        
+        protected static ?SQL_PDO $instance = null ;
+
         public static function __callstatic( $name, $args = [] )
         {
-            
+
             if ( static::$instance == null  )
-                static::$instance = new SQLPDO(  );
-            
+                static::$instance = new SQL_PDO();
+
             // if ( method_exists( static::$instance, $name ) )
             return call_user_func_array( [ static::$instance , $name ] , $args );
-        
+
         }
 
 

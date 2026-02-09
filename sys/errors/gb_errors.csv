@@ -1,0 +1,13 @@
+# api
+700 , Api System Failure ,
+701 , Endpoint not found
+
+#
+800 ,
+801 ,
+802 , Invalid or Expired Reset Token
+803 , Bad Password
+
+# user login
+900 , System Offline [?0]
+901 , Invalid username or password

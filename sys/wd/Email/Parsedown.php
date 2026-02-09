@@ -1,6 +1,7 @@
 <?php
 
     namespace sys\wd\Email;
+
     #
     #
     # Parsedown
@@ -13,6 +14,9 @@
     # with this source code.
     #
     #
+
+    #
+    # https://github.com/erusev/parsedown/blob/master/Parsedown.php
 
     class Parsedown
     {

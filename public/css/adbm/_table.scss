@@ -1,0 +1,70 @@
+.wd-table-box {
+  @apply border border-gray-200 rounded-md shadow-lg p-0 m-0 flex flex-col space-y-1 ;
+
+  .wd-table-section {
+
+    &.wd-topblock {
+      @apply bg-yellow-50 p-2 ;
+    }
+
+    &.wd-iblock {
+      @apply bg-blue-50 p-2 flex space-x-1 h-12;
+      .wd-plen {
+        @apply pr-6 py-0 m-0 shrink-0 text-left;
+      }
+      .wd-sbar {
+        @apply bg-white w-full min-w-12;
+      }
+      .wd-obtn {
+        @apply w-8 h-8 text-white bg-blue-500 px-1 text-2xl rounded-lg button-hover;
+      }
+    }
+
+    &.wd-tblock {
+
+      @apply bg-green-50 p-2;
+      .wd-thead {
+        .wd-thead-tr {
+
+
+          th {
+            @apply border-green-200 border-l-2 first:border-none;
+            font-family: monospace;
+          }
+
+          .wd-th-sort {
+            @apply text-blue-500;
+          }
+
+          .wd-th {
+            @apply flex justify-between ;
+          }
+
+        }
+      }
+
+      .wd-tbody {
+        @apply bg-yellow-50;
+        td {
+          @apply px-2 border-green-200 border-l-2 first:border-none;
+          font-family: monospace;
+        }
+        .wd-td {
+          @apply py-1 overflow-ellipsis whitespace-nowrap;
+        }
+      }
+
+
+
+    }
+
+    &.wd-pblock {
+      @apply bg-blue-50 p-2 flex space-x-1 h-12;
+      .wd-pgn {
+        @apply pr-2 py-0 m-0 shrink-0 text-left;
+      }
+    }
+
+  }
+
+}

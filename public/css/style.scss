@@ -8,20 +8,22 @@
 @tailwind utilities;
 
 @layer base {
-  @import 'wd/base';
-  @import 'wd/adbm' ;
+  @import 'adbm/base';
+  @import 'adbm/buttonbar';
+  // @import 'adbm/buttons';
+  //@import 'wd/adbm' ;
 }
 
 @layer utilities {
-  @import 'wd/extra' ;
-  @import 'wd/form'  ;
-  @import 'wd/table' ;
-
+  @import 'adbm/form'  ;
+  @import 'adbm/table' ;
+  @import 'adbm/modal' ;
 
 }
 
 @layer components {
-  @import 'wd/components';
+  // @import 'adbm/components';
+
 }
 
 
