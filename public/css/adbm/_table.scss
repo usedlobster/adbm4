@@ -1,70 +1,100 @@
 .wd-table-box {
-  @apply border border-gray-200 rounded-md shadow-lg p-0 m-0 flex flex-col space-y-1 ;
 
   .wd-table-section {
 
-    &.wd-topblock {
-      @apply bg-yellow-50 p-2 ;
+    @apply h-auto bg-gray-100 shadow-lg p-1 mb-1 ;
+    @apply bg-gradient-to-r from-blue-200 to-green-100;
+    @apply dark:bg-gradient-to-r dark:from-blue-800 dark:to-green-800;
+
+
+    &.wd-cap-block {
+      @apply h-12 text-xl font-bold flex items-center justify-center;
     }
 
-    &.wd-iblock {
-      @apply bg-blue-50 p-2 flex space-x-1 h-12;
-      .wd-plen {
-        @apply pr-6 py-0 m-0 shrink-0 text-left;
+    &.wd-head-block {
+      @apply h-10 flex items-center justify-start space-x-1;
+
+      .wd-page-len {
+        @apply h-8 min-w-16 p-1 shrink-0 dark:bg-black ;
       }
-      .wd-sbar {
-        @apply bg-white w-full min-w-12;
+
+      .wd-search-box {
+        @apply h-8 px-2 py-1 w-full grow dark:bg-black;
       }
-      .wd-obtn {
-        @apply w-8 h-8 text-white bg-blue-500 px-1 text-2xl rounded-lg button-hover;
+
+      .wd-open-modal-btn {
+        @apply h-8 py-0 px-3 py-0 border bg-blue-600/80 text-white  rounded-md shadow-lg;
       }
+
     }
 
-    &.wd-tblock {
-
-      @apply bg-green-50 p-2;
-      .wd-thead {
-        .wd-thead-tr {
-
-
-          th {
-            @apply border-green-200 border-l-2 first:border-none;
-            font-family: monospace;
+    &.wd-table-block {
+      @apply h-fit w-full p-1 ;
+      thead {
+        th {
+          @apply bg-green-700/50 odd:bg-green-600/50 p-1 text-white;
+          .wd-th-inner {
+            @apply flex items-center justify-between;
           }
-
-          .wd-th-sort {
-            @apply text-blue-500;
-          }
-
-          .wd-th {
-            @apply flex justify-between ;
-          }
-
         }
       }
 
-      .wd-tbody {
-        @apply bg-yellow-50;
-        td {
-          @apply px-2 border-green-200 border-l-2 first:border-none;
-          font-family: monospace;
+      tbody {
+        tr td {
+          @apply bg-blue-400/20 odd:bg-blue-500/20 px-2 py-1 m-1 border overflow-hidden truncate;
         }
-        .wd-td {
-          @apply py-1 overflow-ellipsis whitespace-nowrap;
+      }
+      tfoot {
+        tr  td {
+          @apply px-2 py-1 m-1 border ;
         }
       }
 
 
-
     }
 
-    &.wd-pblock {
-      @apply bg-blue-50 p-2 flex space-x-1 h-12;
-      .wd-pgn {
-        @apply pr-2 py-0 m-0 shrink-0 text-left;
+    &.wd-pager-block {
+      @apply h-10 flex items-center justify-between space-x-1 ;
+
+      .wd-pno-box {
+      }
+
+      .wd-plist-box {
+        @apply grow w-full py-1 h-8 text-right;
+        .wd-page-btn {
+          @apply h-6 w-fit min-w-8 py-0.5 px-1 bg-blue-500 text-white mr-1 font-mono text-sm;
+          &.active {
+            @apply bg-green-500;
+          }
+
+        }
+
       }
     }
+
+    &.wd-footer-block {
+      @apply min-h-10 h-10 flex items-center justify-between space-x-1 ;
+    }
+
+
+    //&.wd-pager-block {
+    //  @apply h-10 flex flex-row items-center justify-between space-x-1 content-center bg-blue-200;
+    //  .wd-pno-box {
+    //    @apply shrink h-9 px-1 py-0 content-center border shadow-lg text-ellipsis truncate;
+    //  }
+    //  .wd-plist-box {
+    //    @apply grow h-9 px-1 py-0 text-right content-center border shadow-lg overflow-hidden truncate;
+    //
+    //    .wd-page-btn {
+    //      @apply h-7 w-fit min-w-8 py-0.5 px-1 bg-blue-500 text-white mr-1 font-mono;
+    //      &.active {
+    //        @apply bg-g
+    //      }
+    //    }
+    //  }
+    //}
+    //
+
 
   }
-
 }

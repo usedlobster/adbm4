@@ -1,10 +1,57 @@
+@keyframes slideUp {
+  0% { transform: translateY(0); opacity: 1; }
+  45% { opacity: 0.7; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+@keyframes slideDown {
+  0% { transform: translateY(0); opacity: 1; }
+  45% { opacity: 0.7; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+@keyframes slideInUp {
+  0% { transform: translateY(100%); opacity: 0; }
+  55% { opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInDown {
+  0% { transform: translateY(-100%); opacity: 0; }
+  55% { opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+
 .wd-modal {
+
+
+  table tbody tr {
+    &.moving-up {
+      animation: slideUp 0.5s ease-in-out forwards;
+    }
+    &.moving-down {
+      animation: slideDown 0.5s ease-in-out forwards;
+    }
+    &.entering-up {
+      animation: slideInUp 0.5s ease-in-out forwards;
+    }
+    &.entering-down {
+      animation: slideInDown 0.5s ease-in-out forwards;
+    }
+    @apply odd:bg-yellow-500/10;
+  }
+
+  table tbody td {
+    @apply odd:bg-yellow-500/10 px-2 py-1 w-fit m-1 text-center;
+  }
+
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -19,7 +66,7 @@
 }
 
 .wd-modal-content {
-  background-color: #00cece;
+  background-color: #fcfcfc;
   padding: 15px;
   border-radius: 5px;
   position: relative;
@@ -27,9 +74,19 @@
   min-height: 75%;
   transform: scale(0.7);
   transition: transform 0.3s ease-in-out;
+  color:black ;
 }
 
 .wd-modal-visible .wd-modal-content {
   transform: scale(1);
 }
 
+.m-btn0 {
+  margin:4px ;
+  @apply px-4 py-2 text-xl bg-gray-50 dark:bg-gray-900 dark:text-white text-black  border rounded-md shadow-lg;
+}
+
+.m-btn1 {
+  margin:4px ;
+  @apply px-4 py-2 text-xl bg-blue-500 dark:bg-green-500 text-white rounded-md;
+}

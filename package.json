@@ -25,6 +25,7 @@
     "zxcvbn-typescript": "^5.0.1"
   },
   "dependencies": {
+    "@types/alpinejs": "^3.13.11",
     "tslib": "^2.5.2"
   }
 }

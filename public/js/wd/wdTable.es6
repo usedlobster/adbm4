@@ -1,695 +1,769 @@
 class wdTable {
 
-    constructor(divid, jobj) {
+    /**
+     * Fixes the sequence of an input array by ensuring it contains all integers
+     * from 0 to n-1, in the correct order. Removes duplicates and invalid values.
+     *
+     * @param {Array} arr - The input array to be fixed. If not an array, it will be treated as empty.
+     * @param {number} n - The upper limit (exclusive) for the valid range of integers.
+     * @return {Array} A repaired array containing integers from 0 to n-1 in order and without duplicates.
+     */
+    fixArraySequence(arr, n) {
 
-        if (typeof divid !== 'string' || typeof jobj !== 'object' || !jobj) {
-            throw new Error('wdTable: invalid parameters');
+        if (!Array.isArray(arr))
+            arr = [];
+
+        let seen = new Set();
+        let repaired = [];
+
+        for (let i = 0; i < arr.length; i++) {
+            const idx = arr[i];
+            if (Number.isInteger(idx) && idx >= 0 && idx < n && !seen.has(idx)) {
+                repaired.push(idx);
+                seen.add(idx);
+            }
         }
 
-        let cfg = this.cfg = jobj?.table;
-        if (!cfg) {
-            throw new Error('wdTable: no table configuration');
+        for (let i = 0; i < n; i++) {
+            if (!seen.has(i)) {
+                repaired.push(i);
+            }
         }
 
-        this.T0 = document.getElementById(divid);
-        if (!this.T0) {
-            throw new Error(`wdTable: divid ${divid} not found`);
+        return repaired;
+    }
+
+
+    recalculateModalIndices(d, k, v) {
+        // Recalculate for row k
+        let up = -1, down = -1;
+        const col_k = this.col[d.data.defs[k].pos];
+        if (col_k?.moveable ?? true) {
+            for (let j = k - 1; j >= 0; j--)
+                if (this.col[d.data.defs[j].pos]?.moveable ?? false) {
+                    up = j;
+                    break;
+                }
+            for (let j = k + 1; j < d.data.defs.length; j++)
+                if (this.col[d.data.defs[j].pos]?.moveable ?? false) {
+                    down = j;
+                    break;
+                }
+        }
+        d.data.defs[k].up = up;
+        d.data.defs[k].down = down;
+
+        // Recalculate for row v
+        up = -1;
+        down = -1;
+        const col_v = this.col[d.data.defs[v].pos];
+        if (col_v?.moveable ?? true) {
+            for (let j = v - 1; j >= 0; j--)
+                if (this.col[d.data.defs[j].pos]?.moveable ?? false) {
+                    up = j;
+                    break;
+                }
+            for (let j = v + 1; j < d.data.defs.length; j++)
+                if (this.col[d.data.defs[j].pos]?.moveable ?? false) {
+                    down = j;
+                    break;
+                }
+        }
+        d.data.defs[v].up = up;
+        d.data.defs[v].down = down;
+    }
+
+    setupTABLE() {
+
+        // load user config
+        this.usercfg = JSON.parse(localStorage.getItem(this.T0.id + '_cfg') ?? '{}');
+        // check version matches default config
+        if ((this.cfg?.version ?? 0) !== (this.usercfg?.version ?? 0))
+            this.usercfg = null;
+
+        let pos = 0;
+        this.col = [];
+        this.cfg.columns?.forEach(col => {
+            if (col?.field) {
+
+                this.col.push({
+                    pos,   // for convenience
+                    field: col?.field,
+                    title: col?.title ?? col?.field ?? (pos + 1),
+                    sortable: col?.sortable ?? true,
+                    moveable: col?.moveable ?? true,
+                    exportable: col?.exportable ?? true,
+                    sort: col?.sort ?? 0,
+                    width: col?.width ?? 1,
+                })
+
+                pos++;
+            }
+        })
+
+        this.ncols = this.col.length;
+        this.colorder = this.fixArraySequence(this.cfg?.order, this.ncols)
+        // now apply user config
+
+        if (this?.usercfg) {
+            const layout = this.usercfg?.layout;
+            if (layout) {
+
+                if (Array.isArray(layout?.order))
+                    this.colorder = this.fixArraySequence(layout.order, this.ncols);
+
+                if (Array.isArray(layout?.defs)) {
+                    if (layout.defs.length === this.ncols) {
+                        layout.defs.forEach((def, i) => {
+                            let col = this.col[def.pos];
+                            col.title = def?.name;
+                            col.width = def?.width;
+                            col.visible = def?.vis;
+                            col.exportable = def?.exp;
+                            col.sort = def?.sort ?? 0;
+                            this.col[def.pos] = col;
+                        });
+                    }
+                }
+            }
         }
 
-        // create empty modal
+        this.fetchPage();
+    }
 
-        this.MODAL           = document.createElement('div');
-        this.MODAL.id        = divid + '_modal';
+    setupINNER() {
+        this.T1 = document.createElement('div');
+        if (!this.T1)
+            throw new Error('wdTable: cannot create table');
+
+        this.T1.id = this.T0.id + '_table';
+        this.T1.className = 'wd-table-box';
+        const resizeFunction = _wd_debounce((entries) => {
+            //
+            // this.repaginate();
+            // this.updateView();
+        }, 100);
+
+        this.T0.appendChild(this.T1);
+        this.resizeObserver = new ResizeObserver(resizeFunction);
+        this.resizeObserver.observe(this.T1);
+
+    }
+
+
+    setupMODAL() {
+        this.MODAL = document.createElement('div');
+        if (!this.MODAL)
+            throw new Error('wdTable: cannot create modal');
+        this.MODAL.id = this.T0.id + '_modal';
         this.MODAL.className = 'wd-modal overflow-hidden';
         this.MODAL.style.display = 'none';
         this.T0.appendChild(this.MODAL);
+    }
 
-        //
+    repaginate() {
 
-        this.T1 = document.createElement('div');
-        this.T1.id = divid + '_table';
-        this.T1.className = 'wd-table-box';
+        this.view.page = Math.floor(this.data.offset / this.view.pageLength);
+        this.view.npages = Math.ceil(this.data.total / this.view.pageLength);
+        if (this.view.page < 0)
+            this.view.page = 0;
 
-        // create hidden modal
-
-        this.T0.appendChild(this.T1);
-        this.col = [];
-        this.colorder = [];
-
-        this.loadUserConfig();
-
-        if (cfg?.columns) {
-
-            let found_sort = null;
-            let index = 0;
-
-            Object.keys(cfg.columns).forEach((k) => {
-
-                let cdef = cfg?.columns?.[k];
-
-                this.col[k] = {
-                    index: index,
-                    title: cdef?.title ?? ('_' + k),
-                    moveable: cdef?.moveable ?? true,
-                    width: cdef?.width ?? 1,
-                    sortable: cdef?.sortable ?? true, // by default sortable
-                    searchable: cdef?.searchable ?? true, // sortable by default
-                    visible: cdef?.visible ?? true,
-                    sort: cdef?.sort ?? 0,
-                    field: cdef?.field ?? k,
-                };
-
-
-                this.colorder[index] = cdef?.order || this?.usercfg?.colorder?.[index] || index;
-
-                index++;
-
-                // note possible sort
-                if (found_sort === null && (cdef?.sortable ?? true)) {
-                    found_sort = this.col[k];
-                }
-
-            });
-
-            if (found_sort && found_sort.sort === 0)
-                found_sort.sort = 1;
-
-
-        }
-
-        this.ncols = this.col.length;
-
-        function fixOrder(colorder, ncols) {
-            const seen = new Set();
-            const repaired = [];
-            for (let i = 0; i < colorder.length; i++) {
-                const idx = colorder[i];
-                if (Number.isInteger(idx) && idx >= 0 && idx < ncols && !seen.has(idx)) {
-                    repaired.push(idx);
-                    seen.add(idx);
-                }
-            }
-
-            for (let i = 0; i < ncols; i++) {
-                if (!seen.has(i)) {
-                    repaired.push(i);
-                }
-            }
-
-
-            return repaired;
-
-
-        }
-
-        if (!this.colorder || !Array.isArray(this.colorder))
-            this.colorder = [];
-
-        this.colorder = fixOrder(this.colorder, this.ncols);
-
-
-        this.ref = {
-            all: false,
-            title: false,
-            error: false,
-            plen: false,
-            sbar: false,
-            obtn: false,
-            colgroup: false,
-            thead: false,
-            tbody: false,
-            pagenumbers: false,
-        };
-
-        this.view = {
-            page: 0,
-            pageLength: this.usercfg?.pageLength ?? this.cfg?.pageLength ?? 5,
-            sbarPlaceHolder: this.cfg?.sbarPlaceHolder ?? 'Search...',
-        };
-
-        this.data = {
-            data: [],
-            offset: 0,
-            end: 0,
-        };
-
-        // test
-        this.refreshTable();
-        this.ref.all = true;
-        this.refreshTable();
-        this.ref.all = true;
-        this.refreshTable();
-        this.ref.all = true;
-        this.refreshTable();
-        this.ref.all = true;
-        this.refreshTable();
-        this.ref.all = true;
-        this.refreshTable();
-        this.ref.all = true;
-        this.refreshTable();
-
-        this.fetchPage();
+        if (this.view.page >= this.view.npages)
+            this.view.page = this.view.npages - 1;
 
     }
 
-    loadUserConfig() {
-        let cfg = localStorage.getItem('wdTableState');
-        this.usercfg = cfg ? JSON.parse(cfg) : {};
-        return this.usercfg;
+
+    setData(data, total, offset) {
+
+        this.data.data = data ?? [];
+        this.data.offset = offset ?? 0;
+        this.data.total = total ?? 0;
+
+        this.repaginate();
+
+        this.ref.all = true;
+        this.updateView();
+        this.updateView();
+        this.ref.all = true;
+        this.updateView();
+        this.updateView();
+
     }
 
-    saveUserConfig() {
-        localStorage.setItem('wdTableState', JSON.stringify(this.usercfg));
-    }
 
-    makeBlock(base, name, tag = 'div', updateCB = null) {
+    fetchNewData() {
 
-        let n = (base?.id ?? 'block') + '-' + name;
-        let E = document.getElementById(n);
-        if (!E) {
-            E = document.createElement(tag);
-            E.id = n;
-            base.appendChild(E);
-            if (updateCB) {
-                updateCB(E, true);
-            }
+        if (!this?.cfg?.ajax)
             return;
-        }
 
-        if (updateCB) {
-            updateCB(E, false);
-        }
-
-    }
-
-    updateTitleBlock() {
-
-        this.makeBlock(this.T1, 'title', 'div', (E, einit) => {
-
-            if (einit) {
-                E.className = 'wd-table-section wd-topblock';
-
-                if (einit || this.ref.title) {
-                    this.makeBlock(E, 'title', 'h1', (Q, qinit) => {
-                        if (qinit) {
-                            Q.className = 'wd-title';
-                        }
-                        Q.textContent = this.cfg?.title ?? '';
-
-                    });
-                    this.ref.title = false;
-                }
-
-                if (einit || this.ref.error) {
-                    this.makeBlock(E, 'error', 'h2', (Q, qinit) => {
-                        if (qinit) {
-                            Q.className = 'wd-error';
-                        }
-
-                        Q.style.display = (this.cfg?.error ? 'block' : 'none');
-                        Q.textContent = this.cfg?.error ?? '';
-
-                    });
-
-                    this.ref.error = false;
-                }
-
-            }
-
-            this.ref.topblock = false;
-
+        let defs = [];
+        this.col?.forEach(col => {
+            if (col?.field)
+                defs.push({
+                    field: col.field,
+                    sort: (col?.sortable ? col.sort : 0),
+                    vis : (col?.visible ?? true),
+                    searchable: col?.searchable ?? true,
+                })
         });
+
+        const payload = {
+            refresh: ++this.ref.refresh,
+            defs,
+            offset: this.view.page * this.view.pageLength,
+            limit: this.view.pageLength,
+            search: this.view.search ?? '',
+        };
+
+        // simple fetch + callback
+        _wd_api_fetch(this.cfg.ajax?.url, payload, (res) => {
+            if (res && res?.refresh === this.ref.refresh)
+                this.setData(res?.data, res?.total, res?.offset);
+        });
+
+
     }
 
-    updateQueryBlock() {
-        this.ref.qblock = false;
+    fetchPage = _wd_debounce(() => {
+        this.fetchNewData();
+    }, 200);
+
+    makeBlock = (base, name, tag, cb) => _wd_make_block(base, name, tag, cb);
+
+
+    /**
+     * Constructs an instance of the class and initializes the DOM element tied to the provided `divid`.
+     * Throws an error if the provided arguments are invalid or the target element is not a DIV.
+     *
+     * @param {string} divid - The ID of the target DIV element in the DOM.
+     * @param {object} jobj - An object containing additional configuration for the construction process.
+     * @return {void}
+     */
+    constructor(divid, jobj) {
+
+        if (!divid || !jobj || 'string' !== typeof divid || 'object' !== typeof jobj)
+            throw new Error('Invalid arguments')
+
+        this.T0 = document.getElementById(divid)
+        try {
+            if (this.T0 && this.T0?.tagName === 'DIV') {
+                this.T0.replaceChildren();
+                this.view = {page: 0, pageLength: 10, search: ''};
+                this.ref = {refresh: 0, all: true};
+                this.data = {data: [], offset: 0, total: 0};
+                this.cfg = jobj?.table;
+                this.setupTABLE();
+                this.setupMODAL();
+                this.setupINNER();
+                this.updateView();
+            } else
+                throw new Error('Invalid Divid')
+
+        } catch (e) {
+            console.log(e)
+            alert(e);
+
+        }
+
     }
 
-    changePageLength(plen) {
+    tableAlpineData() {
+        if (!Alpine)
+            throw new Error('wdTable: alpine not found');
 
-    }
+        let d = Alpine.$data(this.MODAL.firstChild);
+        if (!d)
+            throw new Error('wdTable: cannot get alpine data');
 
-    changeShownPage(p) {
-    }
+        d.data = {};
+        d.data.title = this.cfg?.title ?? '';
+        d.data.defs = [];
+        for (let k = 0; k < this.colorder.length; k++) {
+            const ord = this.colorder[k];
+            const col = this.col[ord];
 
-    updateInfoBlock() {
-
-        this.makeBlock(this.T1, 'infobar', 'div', (E, einit) => {
-            if (einit) {
-                E.className = 'wd-table-section wd-iblock';
-            }
-
-            // page length selector
-            if (einit || this.ref.plen) {
-
-                this.makeBlock(E, 'plen', 'select', (Q, qinit) => {
-                    if (qinit) {
-                        Q.className = 'wd-plen';
-                        let page_lengths = this.cfg?.pagelengths || [1, 3, 5, 10, 25, 50, 100, 250, 500];
-                        page_lengths.forEach((p) => {
-                            let o = document.createElement('option');
-                            o.value = p;
-                            o.innerHTML = p;
-                            Q.appendChild(o);
-                        });
-                        Q.onchange = () => _wd_debounce(this.changePageLength(Q.value), 50, 500);
+            let up = -1, down = -1;
+            if (col?.moveable ?? true) {
+                for (let j = k - 1; j >= 0; j--)
+                    if (this.col[this.colorder[j]]?.moveable ?? false) {
+                        up = j;
+                        break;
                     }
 
+                for (let j = k + 1; j < this.colorder.length; j++)
+                    if (this.col[this.colorder[j]]?.moveable ?? false) {
+                        down = j;
+                        break;
+                    }
+            }
+
+            d.data.defs.push({
+                pos: col.pos,
+                up, down,
+                field: col.field,
+                renameable: col?.renameable ?? false,
+                moveable: col?.moveable ?? true,
+                // user can change these in modal
+                sortable : ( col?.sortable ?? true),
+                sort: (col?.sortable ?? true) ? col?.sort : undefined,
+
+                name: col.title,
+                width: col?.width ?? 1,
+                vis: col?.visible ?? true,
+                exp: col?.exportable ?? true,
+
+            })
+
+
+        }
+
+        return d;
+    }
+
+    tableAction(act, k, v) {
+
+        const moveModalRow = (k, v, dir) => {
+            if (v >= 0) {
+                if (k !== v) {
+                    let d = Alpine.$data(this.MODAL.firstChild);
+                    // Mark both rows for animation BEFORE swapping
+                    d.data.defs[k]._animate = 'out-' + dir;
+                    d.data.defs[v]._animate = 'in-' + dir;
+
+                    // This way, Alpine updates while rows are hidden/fading
+                    setTimeout(() => {
+                        let tmp = d.data.defs[k];
+                        d.data.defs[k] = d.data.defs[v];
+                        d.data.defs[v] = tmp;
+
+                        // Recalculate up/down indices for BOTH affected rows
+                        this.recalculateModalIndices(d, k, v);
+
+                        // Clear animation flags after animation completes
+                        setTimeout(() => {
+                            d.data.defs[k]._animate = null;
+                            d.data.defs[v]._animate = null;
+                        }, 50);
+                        // ← Removed: this.setupTABLE()
+                    }, 450);
+                }
+            }
+        }
+
+        const modalSortChange = (k) => {
+            let d = Alpine.$data(this.MODAL.firstChild);
+            if (!d || !d.data || !d.data.defs)
+                return;
+
+            /*
+            for (let i = 0; i < this.ncols; i++) {
+                const idx = this.colorder[i];
+                if (i === colidx)
+                    this.col[idx].sort = (this.col[idx].sort < 0) ? 1 : -1;
+                else
+                    this.col[idx].sort = 0;
+            }
+            */
+            for ( let i = 0 ; i < this.ncols ; i++ ) {
+                const usr = d.data.defs[i] ;
+                if ( usr?.sortable ) {
+                    if ( i === k )
+                        usr.sort = ( usr.sort < 0 ) ? 1 : -1 ;
+                    else if ( usr.sort !== 0 )
+                        usr.sort = 0 ;
+
+                }
+
+
+            }
+        }
+        const saveModal = () => {
+            let d = Alpine.$data(this.MODAL.firstChild);
+            if (!d || !d.data || !d.data.defs)
+                return;
+
+            const newOrder = [];
+            const newDefs = [];
+            for (let k = 0; k < d.data.defs.length; k++) {
+                const usr = d.data.defs[k];
+                newOrder.push(usr.pos);
+                newDefs.push({
+                    pos: usr?.pos,
+                    name: usr?.name,
+                    width: +(usr?.width ?? 1),
+                    vis: usr?.vis ?? true,
+                    exp: usr?.exp ?? true,
+                    sort: usr?.sort ?? undefined
+                });
+            }
+            if (!this.usercfg)
+                this.usercfg = {};
+            this.usercfg.version = this.cfg?.version ?? 0;
+            this.usercfg.layout = {
+                order: newOrder,
+                defs: newDefs,
+            }
+            localStorage.setItem(this.T0.id + '_cfg', JSON.stringify(this.usercfg));
+            this.setupTABLE();
+
+
+        }
+
+        const resetModal = () => {
+            localStorage.removeItem(this.T0.id + '_cfg');
+            this.usercfg = {};
+            this.setupTABLE();
+            this.tableAlpineData(Alpine.$data(this.MODAL.firstChild))
+
+        }
+
+        switch (act) {
+            case 'modal_init' :
+                const xdata = "{ data: {} , " +
+                    "init() { return this.$root.modalFn( 'init' ) } , " +
+                    "action( t , k , v ) { this.$root.modalFn(t,k,v)} }";
+                k.setAttribute('x-data', xdata);
+                // this._undo = this.col;
+                break;
+            case 'init' :
+                return this.tableAlpineData();
+            case 'reset' :
+                resetModal();
+                break;
+            case 'close' :
+                _wd_close_modal_template(this.MODAL);
+                break;
+            case 'save' :
+                saveModal();
+                _wd_close_modal_template(this.MODAL);
+                break;
+            case 'up' :
+                moveModalRow(k, v?.up, 'up');
+                break;
+            case 'down' :
+                moveModalRow(k, v?.down, 'down');
+                break;
+            case 'sort' :
+                modalSortChange( k  ) ;
+                break ;
+        }
+
+    }
+
+    updateCaption() {
+        this.makeBlock(this.T1, 'cap', 'div', (E, einit) => {
+            if (einit)
+                E.className = 'wd-table-section wd-cap-block';
+            E.textContent = this.cfg?.title ?? 'Table';
+        })
+        this.ref.capBlock = false;
+
+    }
+
+    updateHeaderBlock() {
+
+        this.makeBlock(this.T1, 'head', 'div', (E, einit) => {
+            if (einit)
+                E.className = 'wd-table-section wd-head-block';
+
+            // page length box
+            if (this.ref.headPageLen) {
+                this.makeBlock(E, 'pagelen', 'select', (Q, qinit) => {
+                    if (qinit) {
+                        Q.className = 'wd-page-len';
+                        [1, 3, 5, 10, 15, 20, 25, 50, 100, 200, 500].forEach(v => {
+                            let O = document.createElement('option');
+                            O.value = +v;
+                            O.textContent = v;
+                            Q.appendChild(O);
+                        })
+                        Q.addEventListener('change', () => {
+                            this.view.pageLength = Q.value;
+                            this.fetchPage();
+                        })
+                    }
                     Q.value = this.view.pageLength;
-                    this.ref.plen = false;
-                });
+                })
+                this.ref.headPageLen = false;
             }
 
-            // quick search text filter
-            if (einit || this.ref.sbar) {
-                this.makeBlock(E, 'sbar', 'input', (Q, qinit) => {
+            // search box
+            if (einit || this.ref.headSearchBar) {
+                this.makeBlock(E, 'search', 'input', (Q, qinit) => {
                     if (qinit) {
-                        Q.className = 'wd-sbar';
-                        Q.placeholder = this.view.sbarPlaceHolder ?? '';
+                        Q.className = 'wd-search-box';
+                        Q.setAttribute('type', 'text');
+                        Q.setAttribute('placeholder', 'Search');
+                        Q.setAttribute('spellcheck', 'off');
+                        Q.plceholder = 'Search';
+                        Q.addEventListener('input', () => {
+                            this.view.search = Q.value;
+                            this.fetchPage();
+                        })
+
                     }
-                });
-                this.ref.sbar = false;
+                    Q.value = this.view.search;
+
+
+                })
+
+                this.ref.headSearchBar = false;
             }
 
-            // modal options button
-            if (einit || this.ref.obtn) {
-                this.makeBlock(E, 'obtn', 'button', (Q, qinit) => {
+            // modal button
+            if (einit || this.ref.headControl) {
+                this.makeBlock(E, 'open-modal', 'button', (Q, qinit) => {
                     if (qinit) {
-                        Q.className = 'wd-obtn';
-                        Q.textContent = '⚙';
-                        Q.addEventListener('click', (e) => {
-                            this.openModal();
+                        Q.className = 'wd-open-modal-btn';
+                        Q.textContent = 'Options';
+                        Q.addEventListener('click', () => {
+                            _wd_open_modal_template(this.MODAL,
+                                'table_modal',
+                                (act, k, v) => this.tableAction(act, k, v));
 
                         })
                     }
-                });
-                this.ref.obtn = false;
+                })
             }
+        })
 
-        });
-
-        this.ref.iblock = false;
     }
 
-    updateTableBlock() {
+
+    updateTableView() {
+
+        const setTH = (TH, i) => {
+            const cdef = this.col[this.colorder[i]];
+            const D = TH?.firstChild;
+            if (D) {
+                D.children[0].textContent = '';
+                D.children[1].textContent = cdef.title;
+                D.children[2].className = 'ml-1 py-2 mr-1';
+                if (cdef?.sortable ?? true)
+                    D.children[2].textContent = (cdef?.sort > 0) ? '▲' : ((cdef?.sort < 0) ? '▼' : '⬩');
+                else
+                    D.children[2].textContent = '';
+            }
+
+
+        }
+
+        const toggleSort = (colidx) => {
+
+            for (let i = 0; i < this.ncols; i++) {
+                const idx = this.colorder[i];
+                if (i === colidx)
+                    this.col[idx].sort = (this.col[idx].sort < 0) ? 1 : -1;
+                else
+                    this.col[idx].sort = 0;
+            }
+
+            this.fetchPage();
+
+        }
+
 
         this.makeBlock(this.T1, 'table', 'table', (E, einit) => {
+
             if (einit) {
-                E.className = 'wd-table-section wd-tblock ';
+                E.className = 'wd-table-section wd-table-block';
+                E.appendChild(document.createElement('colgroup'));
+                E.appendChild(document.createElement('thead'));
+                E.appendChild(document.createElement('tbody'));
+                E.appendChild(document.createElement('tfoot'));
             }
 
-            // column group
-            if (einit || this.ref.colgroup) {
-
-                this.makeBlock(E, 'colgroup', 'colgroup', (Q, qinit) => {
-
-                    if (!qinit || Q.childElementCount !== this.ncols) {
-                        Q.replaceChildren();
-                        for (let coln = 0; coln < this.ncols; coln++)
-                            Q.appendChild(document.createElement('COL'));
+            // section 0 - colgroup
+            if (einit || this.ref.tableColGroup) {
+                let Q = E?.children?.[0];
+                if (Q.childElementCount !== this.ncols)
+                    Q.innerHTML = '';
+                let sum = 0;
+                this.colorder.forEach(i => sum += ((this.col[i]?.visible ?? true) ? this.col[i].width : 0));
+                for (let i = 0; i < this.ncols; i++) {
+                    let COL = Q.children[i];
+                    if (!COL) {
+                        COL = document.createElement('col');
+                        Q.appendChild(COL);
                     }
-                    // update
-                    for (let i = 0; i < this.ncols; i++) {
-                        const cdef = this.col[this.colorder[i]];
-                        let COL = Q.children[i];
-                        if (COL) {
-                            if (cdef?.visible ?? true)
-                                COL.style.width = (cdef?.width ?? 5) * 10 + 'rem';
-                            else {
-                                COL.style.width = '0px';
-                            }
-                        }
-                    }
-                });
-
-                this.ref.colgroup = false;
-            }
-
-            // table header
-            if (einit || this.ref.thead) {
-
-                this.makeBlock(E, 'thead', 'thead', (Q, qinit) => {
-
-                    if (qinit) {
-                        Q.className = 'wd-thead';
-                    }
-
-                    // check if need to build
-                    if (qinit || Q.childElementCount !== 1 || Q.children[0].childElementCount !== this.ncols) {
-                        Q.replaceChildren();
-
-                        const TR = document.createElement('tr');
-                        TR.className = 'wd-thead-tr';
-                        for (let coln = 0; coln < this.ncols; coln++) {
-                            const TH = document.createElement('th');
-                            const D = document.createElement('div');
-                            D.className = 'wd-th';
-                            const S1 = document.createElement('span');
-                            const S2 = document.createElement('span');
-                            const S3 = document.createElement('span');
-                            S3.className = 'wd-th-sort';
-                            D.appendChild(S1);
-                            D.appendChild(S2);
-                            D.appendChild(S3);
-                            TH.appendChild(D);
-
-                            const cdef = this.col[this.colorder[coln]];
-                            if (cdef?.sortable ?? true) {
-                                D.addEventListener('click', (e) => {
-                                    _wd_wrap_click_event(e, (e) => {
-                                        for (let ii = 0; ii < this.ncols; ii++) {
-                                            let hdef = this.col[this.colorder[ii]];
-                                            if (ii === coln) {
-                                                hdef.sort = (hdef.sort <= 0) ? 1 : -1;
-                                            } else {
-                                                hdef.sort = 0;
-                                            }
-                                        }
-
-                                        this.ref.thead = true;
-                                        this.fetchPage();
-                                    }, (e) => {
-                                    });
-                                });
-                                TR.appendChild(TH);
-                            }
-                        }
-                        Q.appendChild(TR);
-                    }
-
-                    // populate thead row
-                    const TR = Q.children[0];
-                    if (TR && TR.tagName === 'TR') {
-                        for (let coln = 0; coln < this.ncols; coln++) {
-
-                            const cdef = this.col[this.colorder[coln]];
-                            const TH = TR.children[coln];
-                            if (cdef?.visible ?? true) {
-                                TH.style.display = 'table-cell';
-                            } else {
-                                TH.style.display = 'none';
-                                TH.width = '0px';
-                            }
-
-
-                            if (TH) {
-                                const D = TH.children[0];
-
-                                if (D) {
-                                    if (!cdef?.visible) {
-                                        D.style.display = 'none';
-                                    }
-
-                                    const S1 = D.children[0];
-                                    if (S1) {
-                                        S1.textContent = ''; // '▸' ;
-                                    }
-
-                                    const S2 = D.children[1];
-                                    if (S2) {
-                                        S2.textContent = cdef?.title ?? ('_' + coln);
-                                    }
-
-                                    const S3 = D.children[2];
-                                    if (S3) {
-                                        if (cdef?.sortable) {
-                                            D.children[2].innerText = (cdef?.sort == 0) ? '↕' : (cdef?.sort < 0 ? '▼' : '▲');
-                                        } else {
-                                            D.children[2].innerText = '';
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-
-                });
-
-                this.ref.thead = false;
-            }
-
-            if (einit || this.ref.tbody) {
-
-                this.makeBlock(E, 'tbody', 'tbody', (Q, qinit) => {
-
-                    if (qinit) {
-                        Q.className = 'wd-tbody';
-                    }
-
-                    // how many rows do we need to display
-                    let avail = this.data.end - this.data.offset;
-                    let nrows = (avail > this.view.pageLength) ? this.view.pageLength : avail;
-
-                    if (nrows > 0) {
-
-                        // build table structure if changed
-                        if (qinit || Q.childElementCount !== nrows || Q.children[0].childElementCount !== this.ncols) {
-
-                            Q.replaceChildren();
-                            this.prevdata = [];
-
-                            for (let rown = 0; rown < nrows; rown++) {
-
-
-                                if (!this.prevdata[rown])
-                                    this.prevdata[rown] = [];
-
-                                const TR = document.createElement('tr');
-                                for (let coln = 0; coln < this.ncols; coln++) {
-                                    const TD = document.createElement('td');
-                                    TD.className = 'wd-td';
-                                    TR.appendChild(TD);
-                                    this.prevdata[rown][coln] = undefined;
-                                }
-                                Q.appendChild(TR);
-                            }
-                        }
-
-                        for (let rown = 0; rown < nrows; rown++) {
-                            let row = this.data.data[rown];
-
-                            const TR = Q.children[rown];
-
-
-                            for (let coln = 0; coln < this.ncols; coln++) {
-                                const TD = TR.children[coln];
-                                if (TD) {
-
-                                    const v = row[this.colorder[coln]];
-                                    TD.innerHTML = v ?? '';
-
-                                }
-
-                            }
-                        }
-
-
+                    const cdef = this.col[this.colorder[i]];
+                    let w = Math.floor((cdef?.visible ?? true) ? cdef.width : 0);
+                    if (cdef?.visible ?? true) {
+                        COL.style.width = (sum > 0) ? (Math.floor(((w * 100) / sum)) + '%') : '0';
+                        COL.style.visibility = 'visible';
                     } else {
-                        Q.replaceChildren();
-                        Q.innerHTML = '<tr><td colspan="' + this.ncols + '">No data</td></tr>';
+                        COL.style.width = '0px';
+                        COL.style.visibility = 'collapse';
+
+                    }
+                }
+                this.ref.tableColGroup = false;
+            }
+
+            // section 1 - thead
+            if (einit || this.ref.tableHeader) {
+                let Q = E?.children?.[1];
+                let TR = Q?.firstChild;
+                if (!TR) {
+                    TR = document.createElement('tr');
+                    TR = document.createElement('tr');
+                    Q.appendChild(TR);
+                }
+
+
+                if (TR.childElementCount !== this.ncols)
+                    TR.innerHTML = '';
+
+                for (let i = 0; i < this.ncols; i++) {
+                    let TH = TR.children[i];
+                    if (!TH) {
+                        TH = document.createElement('th');
+                        TH.className = 'wd-th';
+                        const D = document.createElement('div');
+                        D.setAttribute('role', 'button');
+                        D.setAttribute('tabindex', '0');
+                        D.className = 'wd-th-inner';
+                        D.appendChild(document.createElement('div'));
+                        D.appendChild(document.createElement('div'));
+                        D.appendChild(document.createElement('div'));
+
+                        TH.appendChild(D);
+                        TH.addEventListener('click', () => {
+                            toggleSort(i)
+
+                        })
+                        TR.appendChild(TH);
+                    }
+                    // TH.textContent = this.col[this.colorder[i]].title;
+                    setTH(TH, i);
+                }
+
+
+                this.ref.tableHeader = false;
+            }
+
+            // section 2 - tbody
+            if (einit || this.ref.tableBody) {
+
+                let Q = E?.children?.[2];
+                // number of rows in this data page
+                const nrows = Math.min(this.view.pageLength, this?.data?.data?.length ?? 0);
+                // dont have enougth <tr>'s
+                if (Q.childElementCount !== nrows) {
+                    Q.replaceChildren();
+                    for (let i = 0; i < nrows; i++)
+                        Q.appendChild(document.createElement('tr'));
+                }
+
+                for (let i = 0; i < nrows; i++) {
+
+                    let TR = Q.children[i];
+                    TR.innerHTML = '';
+                    for (let j = 0; j < this.ncols; j++)
+                        TR.appendChild(document.createElement('td'));
+
+                    let datrow = this.data.data[i];
+                    for (let j = 0; j < this.ncols; j++) {
+                        const TD = TR.children[j];
+                        TD.textContent = datrow[this.colorder[j]] ?? '';
                     }
 
+                }
 
-                });
 
-                this.ref.tbody = false;
+                this.ref.tableBody = false;
+
             }
 
 
-        });
+            // section 3 - tfoot
+            if (einit || this.ref.tableFooter) {
 
-        this.ref.tblock = false;
+                let Q = E?.children?.[3];
+                let TR = Q?.firstChild;
+                if (!TR) {
+                    TR = document.createElement('tr');
+                    Q.appendChild(TR);
+                }
 
+                if (TR.childElementCount !== this.ncols)
+                    TR.innerHTML = '';
+
+                for (let i = 0; i < this.ncols; i++) {
+                    let TD = TR.children[i];
+                    if (!TD) {
+                        TD = document.createElement('th');
+                        TD.className = 'wd-tf';
+                        TR.appendChild(TD);
+                    }
+                    // TD.textContent = this.col[this.colorder[i]].title;
+                    TD.textContent = '';
+                }
+
+                this.ref.tableFooter = false;
+
+            }
+
+        })
+
+        this.ref.tableBlock = false;
     }
 
-    updatePaginationBlock() {
-        this.makeBlock(this.T1, 'pager', 'div', (E, einit) => {
-            if (einit) {
-                E.className = 'wd-table-section wd-pblock ';
-            }
+    updateFooterBlock() {
 
-            if (einit || this.ref.pagenumbers) {
+        this.makeBlock(this.T1, 'foot', 'div', (E, einit) => {
+            if (einit)
+                E.className = 'wd-table-section wd-foot-block';
 
-                this.makeBlock(E, 'pn', 'div', (Q, qinit) => {
-                    if (qinit) {
-                        const S1 = document.createElement('span');
-                        S1.textContent = 'Page: ';
-                        Q.appendChild(S1);
-                        const P = document.createElement('input');
-                        if (P) {
-                            P.className = 'wd-pgn';
-                            P.type = 'number';
+            if ( einit || this.ref.footPageInfo ) {
 
-                            Q.appendChild(P);
-                        }
-
-                        const S2 = document.createElement('span');
-
-                        Q.appendChild(S2);
-                    }
-
-                    const P = Q.children[1];
-                    if (P) {
-                        P.min = 1;
-                        P.max = this.view.npages;
-                        P.value = this.view.page + 1;
-                        const S = Q.children[2];
-                        if (S)
-                            S.textContent = ' / ' + this.view.npages;
-                    }
-
-
-                });
-
-                this.ref.pagenumbers = false;
             }
         });
-        this.ref.pblock = false;
+        this.ref.footBlock = false;
     }
 
-    refreshTable() {
+    updateView() {
 
         if (this.ref.all) {
-            this.ref.topblock = true; // title block
-            this.ref.qblock = true; // query block
-            this.ref.iblock = true; // info block
-            this.ref.tblock = true; // table block
-            this.ref.tbody = true;
-            this.ref.thead = true;
-            this.ref.pblock = true; // pagination block
-            this.ref.pagenumbers = true;
+            this.ref.capBlock = true;
+            this.ref.headBlock = true;
+            this.ref.tableBlock = true;
+            this.ref.footBlock = true ;
         }
 
-        if (this.ref.topblock || this.ref.title || this.ref.error) {
-            this.updateTitleBlock();
+        if (this.ref.capBlock)
+            this.updateCaption();
+
+        if (this.ref.headBlock) {
+            this.ref.headPageLen = true;
+            this.ref.headSearchBar = true;
+            this.ref.headControl = true;
         }
 
-        if (this.ref.qblock) {
-            this.updateQueryBlock();
+        if (this.ref.headBlock || this.ref.headPageLen || this.ref.headSearchBar || this.ref.headControl)
+            this.updateHeaderBlock();
+
+        if (this.ref.tableBlock) {
+            this.ref.tableColGroup = true;
+            this.ref.tableHeader = true;
+            this.ref.tableBody = true;
+            this.ref.tableFooter = true;
         }
 
-        if (this.ref.iblock || this.ref.plen || this.ref.sbar || this.ref.obtn) {
-            this.updateInfoBlock();
-        } // iblock contains page size / search bar and options
+        if (this.ref.tableBlock || this.ref.tableColGroup || this.ref.tableHeader || this.ref.tableBody || this.ref.tableFooter)
+            this.updateTableView();
 
-        if (this.ref.tblock || this.ref.colgroup || this.ref.thead || this.ref.tbody) {
-            this.updateTableBlock();
+        if ( this.ref.footBlock ) {
+            this.ref.footPageInfo = true ;
+            this.ref.footPageList = true ;
         }
 
-        if (this.ref.pblock || this.ref.pagenumbers) {
-            this.updatePaginationBlock();
-        }
+        if ( this.ref.footPageInfo || this.ref.footPageList )
+            this.updateFooterBlock() ;
+
 
         this.ref.all = false;
     }
 
-
-    fetchPage() {
-
-        const payload = {
-            defs: this.col,
-            offset: this.view.page * this.view.pageLength,
-            limit: this.view.pageLength,
-            search: this.view.search,
-        };
-
-        this.T1.style.opacity = 0.2;
-        if (this.cfg?.ajax) {
-
-            _wd_api_fetch(this.cfg.ajax?.url, payload, (res) => {
-
-                console.log('<data>', res);
-                this.T1.style.opacity = 1;
-                if (!res || res?.error) {
-                    if (res?.error)
-                        alert(res?.error);
-                    console.error(res?.error);
-                    this.data = {data: [], offset: [0], end: 0};
-
-                } else
-                    this.data = {data: res?.data || [], offset: res?.offset || payload?.offset, end: res?.end || 0};
-
-
-                this.view.npages = Math.max(1, Math.ceil(this.data.end / this.view.pageLength));
-
-                this.ref.all = true;
-                this.refreshTable();
-
-            });
-        }
-
-    }
-
-
-    openModal() {
-
-        if ( !this.MODAL )
-            return ;
-
-        const tempnode = document.getElementById('table_modal');
-        if (!tempnode)
-            throw new Error('template not found' );
-
-        const frag = tempnode.content.cloneNode(true);
-        if (!frag)
-            throw new Error('failed to find modal template id  : ');
-
-        this.MODAL.replaceChildren() ;
-
-        const M = document.createElement( 'div' ) ;
-
-        M.actionFn = (act, k, v) => {
-            console.log( 'actionFn ' , act , k , v ) ;
-            switch( act ) {
-                case 'init' : {
-                    let d = Alpine.$data(M);
-                    d.data = {} ;
-                }
-            }
-        }
-
-        M.className = 'wd-modal-content' ;
-        M.style.display = 'block';
-
-        const xdata = "{ data: {} , init() { return this.$root.actionFn( 'init' ) } , action( t , k , v ) { this.$root.actionFn(t,k,v)} }";
-        M.setAttribute('x-data', xdata);
-        M.appendChild( frag ) ;
-
-        this.MODAL.appendChild( M ) ;
-        this.MODAL.style.display = 'block';
-
-        const removeModal = () => {
-            const M = this.MODAL.firstChild ;
-            if ( M )
-                M.remove() ;
-            this.MODAL.replaceChildren() ;
-            this.MODAL.style.display = 'none';
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                removeModal() ;
-            }
-        })
-
-        document.addEventListener('click', (e) => {
-            if (e.target === this.MODAL) {
-                removeModal() ;
-            }
-        })
-
-
-
-
-
-
-
-        // load template
-
-
-
-    }
-
 }
-

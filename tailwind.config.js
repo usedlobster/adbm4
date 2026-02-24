@@ -4,7 +4,7 @@ module.exports = {
     content: [
         './**/*.blade.php' ,
         './**/*.php',
-        'public/js/wd/**/*.min.js'
+        './public/js/wd/**/*.min.js'
     ],
     darkMode: [ 'selector' ],
     theme: {

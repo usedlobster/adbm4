@@ -44,7 +44,7 @@ class DataSource
         return $this;
     }
 
-    public function col( string $tablefield, string $alias = '')
+    public function col(string $tablefield, string $alias = '')
     {
         if (empty($tablefield))
             throw new \Exception('datasource field empty');
@@ -67,9 +67,9 @@ class DataSource
 
     }
 
-    public function expr(string $expr, string $alias = '' )
+    public function expr(string $expr, string $alias = '')
     {
-        $this->_coldefs[] = ['t'=>'','f'=>'','a'=>$alias , 'x' => $expr ];
+        $this->_coldefs[] = ['t' => '', 'f' => '', 'a' => $alias, 'x' => $expr];
         return $this;
     }
 
@@ -81,14 +81,7 @@ class DataSource
 
     public function where(string $cond)
     {
-        if (!empty($cond)) {
-            if (empty($this->_where))
-                $this->_where = " ( $cond ) ";
-            else {
-                $this->_where = " ({ $this->_where ) ) AND ( {$cond} )";
-            }
-        }
-
+        $this->_where .= ($this->_where ? ' AND ' : ' ').$cond;
         return $this;
     }
 
@@ -126,8 +119,6 @@ class DataSource
                 $from .= " ON {$j['cond']}";
         }
         $this->_from = $from;
-
-
     }
 
     public function findField(string $field) : ?array
@@ -150,13 +141,12 @@ class DataSource
     public function getTerm(array $cdef) : string
     {
         $term = '';
-        if (!empty(($x = $cdef['x']) ?? '')) {
-            $term = '(' . $x . ')'  ;
-        }
+        if (!empty(($x = $cdef['x']) ?? ''))
+            $term = '('.$x.')';
         else {
-            $term = '' ;
-            if ( $cdef['t'] )
-                $term .= "{$cdef['t']}." ;
+            $term = '';
+            if ($cdef['t'])
+                $term .= "{$cdef['t']}.";
             $term .= $cdef['f'];
         }
 
@@ -169,23 +159,30 @@ class DataSource
     public function getTermField(array $cdef) : string
     {
         $term = '';
-        if (!empty(($x = $cdef['x']) ?? '')) {
-            $term = '(' . $x . ')'  ;
-        }
+        if (!empty(($x = $cdef['x']) ?? ''))
+            $term = '('.$x.')';
         else {
-            $term = '' ;
-            if ( $cdef['t'] )
-                $term .= "{$cdef['t']}." ;
+            $term = '';
+            if ($cdef['t'])
+                $term .= "{$cdef['t']}.";
             $term .= $cdef['f'];
         }
 
         return $term;
     }
-    public function getOrderTerm( array $cdef ) : string
+
+    public function getWhereTerm( $field ) : string
     {
-        return $this->getTerm( $cdef ) ;
+        $cdef = $this->findField($field);
+        if (!$cdef)
+            return '' ;
+        return $this->getTermField($cdef);
     }
 
+    public function getOrderTerm(array $cdef) : string
+    {
+        return $this->getTerm($cdef);
+    }
 
     public function buildCOUNT(array $ext = []) : array
     {
@@ -194,22 +191,27 @@ class DataSource
         if ($this->_from)
             $sql .= " FROM {$this->_from}";
 
-        if (!empty($this->_where))
-            $sql .= " WHERE {$this->_where} ";
-
         return [$sql, $this->_params];
     }
 
     public function buildSELECT(array $ext = []) : array
     {
-        $sql = ' SELECT '.(($ext['distinct'] ?? false) ? 'DISTINCT ' : '');
-        $sql .= ($ext['fields'] ?? false) ? : join(', ', array_map([$this, 'getTerm'], $this->_coldefs));
+        if (empty($ext['fields'] ?? false))
+            return ['', []];
+
+        $sql = ' SELECT '.(($ext['distinct'] ?? false) ? 'DISTINCT ' : '').$ext['fields'];
+        // $sql .= ( $ext['fields'] ?? false ) ?: '*' ;
+        // $sql .= ($ext['fields'] ?? false) ? : join(', ', array_map([$this, 'getTerm'], $this->_coldefs));
 
         if ($this->_from)
             $sql .= " FROM {$this->_from}";
 
-        if (!empty($this->_where))
-            $sql .= " WHERE {$this->_where} ";
+        $w = trim($this->_where);
+        if (!empty($ext['search'])) {
+            $w .= ($w ? ' AND ' : '')." ( {$ext['search']} ) ";
+
+            $sql .= " WHERE {$w} ";
+        }
 
         if (!empty($ext['sort']))
             $sql .= " ORDER BY {$ext['sort']} ";
