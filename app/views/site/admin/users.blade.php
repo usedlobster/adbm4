@@ -1,8 +1,9 @@
 @extends( 'layout.app' )
 @section( 'app-script' )
-    <script src="/js/wd/wdTableForm.min.js?q={{_BUILD}}"></script>
+
     <script src="/js/wd/wdTable.min.js?q={{_BUILD}}"></script>
     <script src="/js/wd/wdForm.min.js?q={{_BUILD}}"></script>
+    <script src="/js/wd/wdTableForm.min.js?q={{_BUILD}}"></script>
 @endsection
 @section( 'app' )
     @include( 'layout.modal.table' )

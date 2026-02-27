@@ -30,21 +30,10 @@ class wdTableForm {
 
 
         this.TABLE = ( this.T && (typeof wdTable !== 'undefined' )) ? new wdTable( this.T.id , json )   : null ;
-        this.FORM  = ( this.F && (typeof wdForm !== 'undefined' )) ? new wdForm( this.F.id , json , id ) : null ;
+        this.FORM  = ( this.F && (typeof wdForm  !== 'undefined' )) ? new wdForm( this.F.id , json , id ) : null ;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+        // if ( !this.TABLE || !this.FORM )
+        //     throw new Error('wdTableForm: wdTable or wdForm not found') ;
 
 
     }
