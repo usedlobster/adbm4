@@ -176,6 +176,7 @@ class DataSource
         $cdef = $this->findField($field);
         if (!$cdef)
             return '' ;
+
         return $this->getTermField($cdef);
     }
 
@@ -184,6 +185,8 @@ class DataSource
         return $this->getTerm($cdef);
     }
 
+
+
     public function buildCOUNT(array $ext = []) : array
     {
         $sql = ' SELECT '.(($ext['distinct'] ?? false) ? 'DISTINCT ' : '').' COUNT(*) ';
@@ -191,7 +194,16 @@ class DataSource
         if ($this->_from)
             $sql .= " FROM {$this->_from}";
 
-        return [$sql, $this->_params];
+        $w = trim($this->_where) ;
+        $sp = $this->_params ?? [] ;
+        $st = $ext['search'] ?? ['',[]] ;
+        if (!empty($st[0])) {
+            $w .= ($w ? ' AND ' : '')." ( $st[0] ) ";
+            $sql .= " WHERE {$w} ";
+            $sp += $st[1] ;
+        }
+
+        return [$sql, $sp];
     }
 
     public function buildSELECT(array $ext = []) : array
@@ -199,19 +211,22 @@ class DataSource
         if (empty($ext['fields'] ?? false))
             return ['', []];
 
+
         $sql = ' SELECT '.(($ext['distinct'] ?? false) ? 'DISTINCT ' : '').$ext['fields'];
-        // $sql .= ( $ext['fields'] ?? false ) ?: '*' ;
-        // $sql .= ($ext['fields'] ?? false) ? : join(', ', array_map([$this, 'getTerm'], $this->_coldefs));
 
         if ($this->_from)
             $sql .= " FROM {$this->_from}";
 
-        $w = trim($this->_where);
-        if (!empty($ext['search'])) {
-            $w .= ($w ? ' AND ' : '')." ( {$ext['search']} ) ";
-
+        $w = trim($this->_where) ;
+        $sp = $this->_params ?? [] ;
+        $st = $ext['search'] ?? ['',[]] ;
+        if (!empty($st[0])) {
+            $w .= ($w ? ' AND ' : '')." ( $st[0] ) ";
             $sql .= " WHERE {$w} ";
+            $sp += $st[1] ;
         }
+
+
 
         if (!empty($ext['sort']))
             $sql .= " ORDER BY {$ext['sort']} ";
@@ -221,7 +236,7 @@ class DataSource
         elseif (!empty($this->_limit))
             $sql .= " LIMIT {$this->_limit} ";
 
-        return [$sql, $this->_params];
+        return [$sql, $sp];
     }
 
 }

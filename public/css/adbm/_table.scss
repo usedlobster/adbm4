@@ -42,10 +42,18 @@
       tbody {
         tr td {
           @apply bg-blue-400/20 odd:bg-blue-500/20 px-2 py-1 m-1 border overflow-hidden truncate;
+          .highlight {
+            @apply bg-yellow-300/80 p-0.5;
+          }
+          .wd-btn {
+            @apply bg-black px-1 py-0.5 text-white min-w-12 max-w-12 text-xs;
+          }
+
         }
       }
+
       tfoot {
-        tr  td {
+        tr td {
           @apply px-2 py-1 m-1 border ;
         }
       }
@@ -53,48 +61,30 @@
 
     }
 
-    &.wd-pager-block {
-      @apply h-10 flex items-center justify-between space-x-1 ;
 
-      .wd-pno-box {
+    &.wd-footer-block {
+      @apply min-h-10 h-10 flex items-center justify-between space-x-1 ;
+      .page-input{
+        @apply h-8 px-2 py-1 w-fit shrink;
       }
+    }
 
-      .wd-plist-box {
-        @apply grow w-full py-1 h-8 text-right;
-        .wd-page-btn {
-          @apply h-6 w-fit min-w-8 py-0.5 px-1 bg-blue-500 text-white mr-1 font-mono text-sm;
-          &.active {
-            @apply bg-green-500;
-          }
+    &.wd-qbar-block {
+      @apply min-h-10 h-10 flex items-center justify-between space-x-2 ;
+      .wd-qbar-inner {
+        @apply flex items-center justify-between space-x-2;
+        .wd-qbar-item {
 
         }
 
       }
+
     }
-
-    &.wd-footer-block {
-      @apply min-h-10 h-10 flex items-center justify-between space-x-1 ;
-    }
-
-
-    //&.wd-pager-block {
-    //  @apply h-10 flex flex-row items-center justify-between space-x-1 content-center bg-blue-200;
-    //  .wd-pno-box {
-    //    @apply shrink h-9 px-1 py-0 content-center border shadow-lg text-ellipsis truncate;
-    //  }
-    //  .wd-plist-box {
-    //    @apply grow h-9 px-1 py-0 text-right content-center border shadow-lg overflow-hidden truncate;
-    //
-    //    .wd-page-btn {
-    //      @apply h-7 w-fit min-w-8 py-0.5 px-1 bg-blue-500 text-white mr-1 font-mono;
-    //      &.active {
-    //        @apply bg-g
-    //      }
-    //    }
-    //  }
-    //}
-    //
-
 
   }
+
+  .wd-qbtn {
+    @apply bg-blue-800/100 text-white  px-3 py-1 button-hover;
+  }
+
 }

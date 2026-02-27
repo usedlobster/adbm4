@@ -97,21 +97,22 @@ class DataHandler
 
         $search = trim($p->search ?? '');
         if ( empty( $search))
-            return '' ;
+            return ['',[]] ;
 
 
         // if ( str_starts_with( $search , '::' ))
         //     return '' ; // special search
-        $s = '' ;
+        $s = '' ; $params =[] ;
         foreach( $p->defs as $d ) {
             if ( $d->searchable ?? true) {
                 $f = $dc->getWhereTerm($d->field);
-                if (!empty($f))
-                    $s .= " OR {$f} LIKE '%{$search}%'";
+                if (!empty($f)) {
+                    $s .= " OR {$f} LIKE ?";
+                    $params[] = "%{$search}%";
+                }
             }
-
         }
-        return trim( $s , ' OR ') ;
+        return [ trim($s , ' OR ' ), $params ] ;
 
 
     }

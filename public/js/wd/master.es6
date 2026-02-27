@@ -139,7 +139,7 @@ async function _wd_api_fetch(url, payload = {}, callBack = null, isRetry = false
 
 function _wd_make_block( base , name, tag = 'div', updateCB = null) {
 
-    let n = (base?.id ?? 'blk') + '-' + name;
+    let n = (base?.id ?? 'blk') + '_' + name;
     let E = document.getElementById(n);
     if (!E) {
         E = document.createElement(tag);
@@ -218,15 +218,51 @@ function _wd_close_modal_template(MODAL ) {
             //
             M.modalFn?.('modal_close', M);
             // Remove the event listeners
-            document.removeEventListener('keydown', M._keyDownHandler);
-            document.removeEventListener('click', M._clickHandler);
-
+            document.removeEventListener('keydown' , M._keyDownHandler);
+            document.removeEventListener('click'   , M._clickHandler);
             M.remove();
             MODAL.replaceChildren();
             MODAL.style.display = 'none';
             document.body.style.overflow = '';
+
         }
     }
 }
 
 
+class wdTextHighlighter {
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Helper to escape special regex characters
+    escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    constructor(options = {}) {
+        console.log('options', options);
+        this.highlightClass = options.className || '';
+        this.highlightStyle = options.style || '';
+    }
+
+    highlight(text, search) {
+        if (!search || (!this.highlightClass && !this.highlightStyle))
+            return this.escapeHtml(text);
+
+        const safeText = this.escapeHtml(text);
+        const searchWords = search.split(' ').filter(word => word.length > 0);
+        const pattern = searchWords
+            .map(word => this.escapeRegExp(word))
+            .join('|');
+
+        return safeText.replace(
+            new RegExp(`(${pattern})`, 'gi'),
+            this.highlightClass ?
+                `<span class="${this.highlightClass}">$1</span>` :
+                `<span style="${this.highlightStyle}">$1</span>`
+        );
+    }
+}

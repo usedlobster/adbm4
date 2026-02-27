@@ -1,13 +1,5 @@
 class wdTable {
 
-    /**
-     * Fixes the sequence of an input array by ensuring it contains all integers
-     * from 0 to n-1, in the correct order. Removes duplicates and invalid values.
-     *
-     * @param {Array} arr - The input array to be fixed. If not an array, it will be treated as empty.
-     * @param {number} n - The upper limit (exclusive) for the valid range of integers.
-     * @return {Array} A repaired array containing integers from 0 to n-1 in order and without duplicates.
-     */
     fixArraySequence(arr, n) {
 
         if (!Array.isArray(arr))
@@ -32,7 +24,6 @@ class wdTable {
 
         return repaired;
     }
-
 
     recalculateModalIndices(d, k, v) {
         // Recalculate for row k
@@ -95,6 +86,7 @@ class wdTable {
                     exportable: col?.exportable ?? true,
                     sort: col?.sort ?? 0,
                     width: col?.width ?? 1,
+                    type: col?.type ?? 'text',
                 })
 
                 pos++;
@@ -104,6 +96,7 @@ class wdTable {
         this.ncols = this.col.length;
         this.colorder = this.fixArraySequence(this.cfg?.order, this.ncols)
         // now apply user config
+
 
         if (this?.usercfg) {
             const layout = this.usercfg?.layout;
@@ -128,6 +121,8 @@ class wdTable {
             }
         }
 
+        this.ref.tableHeader = true;
+        this.ref.tableColGroup = true;
         this.fetchPage();
     }
 
@@ -138,15 +133,16 @@ class wdTable {
 
         this.T1.id = this.T0.id + '_table';
         this.T1.className = 'wd-table-box';
-        const resizeFunction = _wd_debounce((entries) => {
-            //
-            // this.repaginate();
-            // this.updateView();
-        }, 100);
-
         this.T0.appendChild(this.T1);
-        this.resizeObserver = new ResizeObserver(resizeFunction);
-        this.resizeObserver.observe(this.T1);
+
+        // const resizeFunction = _wd_debounce((entries) => {
+        //
+        // }, 100);
+        //
+        //
+        // this.resizeObserver = new ResizeObserver(resizeFunction);
+        // this.resizeObserver.observe(this.T1);
+
 
     }
 
@@ -163,18 +159,26 @@ class wdTable {
 
     repaginate() {
 
-        this.view.page = Math.floor(this.data.offset / this.view.pageLength);
-        this.view.npages = Math.ceil(this.data.total / this.view.pageLength);
-        if (this.view.page < 0)
-            this.view.page = 0;
+        let newPage = Math.floor(this.data.offset / this.view.pageLength);
+        let newCount = Math.ceil(this.data.total / this.view.pageLength);
 
-        if (this.view.page >= this.view.npages)
-            this.view.page = this.view.npages - 1;
+        if (newPage < 0)
+            newPage = 0;
+        if (newPage > newCount - 1)
+            newPage = (newCount > 0) ? newCount - 1 : 0;
 
+        if (newPage !== this.view.page || newCount !== this.view.npages) {
+            this.view.npages = newCount;
+            this.view.page = newPage;
+            this.ref.footBlock = true;
+        }
     }
 
 
     setData(data, total, offset) {
+
+        if (offset < 0 || total == 0)
+            offset = 0;
 
         this.data.data = data ?? [];
         this.data.offset = offset ?? 0;
@@ -182,13 +186,17 @@ class wdTable {
 
         this.repaginate();
 
-        this.ref.all = true;
-        this.updateView();
-        this.updateView();
-        this.ref.all = true;
-        this.updateView();
-        this.updateView();
+        this.ref.tableBody = true;
+        this.ref.tableHeader = true;
 
+        this.ref.tableFooter = true;
+
+        this.updateView();
+    }
+
+    showLoading(a = null) {
+        this.ref.loading = (a !== null) ? a : this.ref.loading;
+        this.T1.style.opacity = (this.ref.loading) ? '0.6' : '1.0';
     }
 
 
@@ -197,30 +205,50 @@ class wdTable {
         if (!this?.cfg?.ajax)
             return;
 
-        let defs = [];
-        this.col?.forEach(col => {
-            if (col?.field)
-                defs.push({
-                    field: col.field,
-                    sort: (col?.sortable ? col.sort : 0),
-                    vis : (col?.visible ?? true),
-                    searchable: col?.searchable ?? true,
-                })
-        });
 
-        const payload = {
-            refresh: ++this.ref.refresh,
-            defs,
-            offset: this.view.page * this.view.pageLength,
-            limit: this.view.pageLength,
-            search: this.view.search ?? '',
-        };
+        try {
+            this.showLoading(true);
+            //
+            let defs = [];
+            this.col?.forEach(col => {
+                if (col?.field)
+                    defs.push({
+                        field: col.field,
+                        sort: (col?.sortable ? col.sort : 0),
+                        vis: (col?.visible ?? true),
+                        searchable: col?.searchable ?? true,
+                    })
+            });
 
-        // simple fetch + callback
-        _wd_api_fetch(this.cfg.ajax?.url, payload, (res) => {
-            if (res && res?.refresh === this.ref.refresh)
-                this.setData(res?.data, res?.total, res?.offset);
-        });
+            const payload = {
+                refresh: ++this.ref.refresh,
+                defs,
+                offset: this.view.page * this.view.pageLength,
+                limit: this.view.pageLength,
+                search: this.view.search ?? '',
+            };
+
+            console.log('fetchNewData: payload = ', payload);
+
+            // simple fetch + callback
+            _wd_api_fetch(this.cfg.ajax?.url, payload, (res) => {
+                if (res && res?.refresh === this.ref.refresh) {
+                    this.setData(res?.data, res?.total, res?.offset)
+                    this.ref.loading = false;
+                }
+
+                this.showLoading(false);
+
+            });
+
+            // not yet still loading async
+
+
+        } catch (e) {
+            this.showLoading(false);
+            console.log(e);
+            alert(e);
+        }
 
 
     }
@@ -231,15 +259,6 @@ class wdTable {
 
     makeBlock = (base, name, tag, cb) => _wd_make_block(base, name, tag, cb);
 
-
-    /**
-     * Constructs an instance of the class and initializes the DOM element tied to the provided `divid`.
-     * Throws an error if the provided arguments are invalid or the target element is not a DIV.
-     *
-     * @param {string} divid - The ID of the target DIV element in the DOM.
-     * @param {object} jobj - An object containing additional configuration for the construction process.
-     * @return {void}
-     */
     constructor(divid, jobj) {
 
         if (!divid || !jobj || 'string' !== typeof divid || 'object' !== typeof jobj)
@@ -250,13 +269,13 @@ class wdTable {
             if (this.T0 && this.T0?.tagName === 'DIV') {
                 this.T0.replaceChildren();
                 this.view = {page: 0, pageLength: 10, search: ''};
-                this.ref = {refresh: 0, all: true};
+                this.ref = {refresh: 0, all: true, highlight: true};
                 this.data = {data: [], offset: 0, total: 0};
                 this.cfg = jobj?.table;
                 this.setupTABLE();
                 this.setupMODAL();
                 this.setupINNER();
-                this.updateView();
+
             } else
                 throw new Error('Invalid Divid')
 
@@ -266,6 +285,7 @@ class wdTable {
 
         }
 
+        this.highlighter = (typeof wdTextHighlighter !== 'undefined') ? new wdTextHighlighter({className: 'highlight'}) : null;
     }
 
     tableAlpineData() {
@@ -305,7 +325,7 @@ class wdTable {
                 renameable: col?.renameable ?? false,
                 moveable: col?.moveable ?? true,
                 // user can change these in modal
-                sortable : ( col?.sortable ?? true),
+                sortable: (col?.sortable ?? true),
                 sort: (col?.sortable ?? true) ? col?.sort : undefined,
 
                 name: col.title,
@@ -365,13 +385,13 @@ class wdTable {
                     this.col[idx].sort = 0;
             }
             */
-            for ( let i = 0 ; i < this.ncols ; i++ ) {
-                const usr = d.data.defs[i] ;
-                if ( usr?.sortable ) {
-                    if ( i === k )
-                        usr.sort = ( usr.sort < 0 ) ? 1 : -1 ;
-                    else if ( usr.sort !== 0 )
-                        usr.sort = 0 ;
+            for (let i = 0; i < this.ncols; i++) {
+                const usr = d.data.defs[i];
+                if (usr?.sortable) {
+                    if (i === k)
+                        usr.sort = (usr.sort < 0) ? 1 : -1;
+                    else if (usr.sort !== 0)
+                        usr.sort = 0;
 
                 }
 
@@ -445,8 +465,8 @@ class wdTable {
                 moveModalRow(k, v?.down, 'down');
                 break;
             case 'sort' :
-                modalSortChange( k  ) ;
-                break ;
+                modalSortChange(k);
+                break;
         }
 
     }
@@ -457,6 +477,7 @@ class wdTable {
                 E.className = 'wd-table-section wd-cap-block';
             E.textContent = this.cfg?.title ?? 'Table';
         })
+
         this.ref.capBlock = false;
 
     }
@@ -464,6 +485,7 @@ class wdTable {
     updateHeaderBlock() {
 
         this.makeBlock(this.T1, 'head', 'div', (E, einit) => {
+
             if (einit)
                 E.className = 'wd-table-section wd-head-block';
 
@@ -480,6 +502,8 @@ class wdTable {
                         })
                         Q.addEventListener('change', () => {
                             this.view.pageLength = Q.value;
+                            // its infinetly easier just to go to page 1
+                            this.view.page = 0;
                             this.fetchPage();
                         })
                     }
@@ -500,6 +524,7 @@ class wdTable {
                         Q.addEventListener('input', () => {
                             this.view.search = Q.value;
                             this.fetchPage();
+
                         })
 
                     }
@@ -515,7 +540,7 @@ class wdTable {
             if (einit || this.ref.headControl) {
                 this.makeBlock(E, 'open-modal', 'button', (Q, qinit) => {
                     if (qinit) {
-                        Q.className = 'wd-open-modal-btn';
+                        Q.className = 'wd-open-modal-btn button-hover';
                         Q.textContent = 'Options';
                         Q.addEventListener('click', () => {
                             _wd_open_modal_template(this.MODAL,
@@ -525,9 +550,66 @@ class wdTable {
                         })
                     }
                 })
+
+                this.ref.headControl = false;
             }
         })
 
+        this.ref.headBlock = false;
+
+    }
+
+    updateQbarBlock() {
+
+        // create button in B , parent
+
+
+        let qbar = this?.cfg?.qbar ;
+        if ( qbar ) this.makeBlock(this.T1, 'qbar', 'div', (E, einit) => {
+            if ( einit ) {
+                E.className = 'wd-table-section wd-qbar-block';
+                E.innerHTML = '<div class="wd-qbar-inner"></div>';
+            }
+            let Q = E?.firstElementChild ;
+            if ( !Q )
+                return ;
+            if ( !(Q?.id))
+                Q.id = E.id + '_q' ;
+
+            qbar.forEach( ( q , i ) => {
+                this.makeBlock( Q , i , 'div' , ( B , binit ) => {
+
+                    if ( binit ) {
+                        B.className = 'wd-qbar-item';
+
+                        switch (q?.type) {
+                            case 'btn' :
+                                B.innerHTML = '<button class="wd-qbtn">' + q.name + '</button>';
+                                B.addEventListener('click', () => {
+
+
+                                })
+                                break;
+                            default:
+                                Q.removeChild(B);
+                        }
+
+                    }
+
+
+                })
+
+            })
+
+
+
+
+
+
+        })
+
+
+        this.ref.qbarBlock = false;
     }
 
 
@@ -548,7 +630,33 @@ class wdTable {
 
 
         }
+        const setTD = (TD, cdef, v) => {
 
+
+            const t = cdef?.type ?? 'text';
+            if (!TD || (!this.ref.highlight && TD._cachedValue === v && TD._cacheType === t))
+                return;
+
+            switch (t) {
+                case 'text' : {
+                    if ((cdef?.searchable ?? true) && v !== '' && this.highlighter && this.view.search)
+                        TD.innerHTML = this.highlighter.highlight(v, this.view.search);
+                    else
+                        TD.textContent = v;
+                }
+                    break;
+                case 'button' : {
+                    TD.innerHTML = '<button class="wd-btn">Edit</button>';
+                }
+                    break;
+                default:
+                    TD.textContent = '[' + v + ']';
+                    break;
+            }
+            // Cache the value for next time
+            TD._cacheType = t;
+            TD._cachedValue = v;
+        }
         const toggleSort = (colidx) => {
 
             for (let i = 0; i < this.ncols; i++) {
@@ -563,149 +671,159 @@ class wdTable {
 
         }
 
-
         this.makeBlock(this.T1, 'table', 'table', (E, einit) => {
 
-            if (einit) {
-                E.className = 'wd-table-section wd-table-block';
-                E.appendChild(document.createElement('colgroup'));
-                E.appendChild(document.createElement('thead'));
-                E.appendChild(document.createElement('tbody'));
-                E.appendChild(document.createElement('tfoot'));
-            }
+                if (einit) {
+                    E.className = 'wd-table-section wd-table-block';
+                    E.appendChild(document.createElement('colgroup'));
+                    E.appendChild(document.createElement('thead'));
+                    E.appendChild(document.createElement('tbody'));
+                    E.appendChild(document.createElement('tfoot'));
+                }
 
-            // section 0 - colgroup
-            if (einit || this.ref.tableColGroup) {
-                let Q = E?.children?.[0];
-                if (Q.childElementCount !== this.ncols)
-                    Q.innerHTML = '';
-                let sum = 0;
-                this.colorder.forEach(i => sum += ((this.col[i]?.visible ?? true) ? this.col[i].width : 0));
-                for (let i = 0; i < this.ncols; i++) {
-                    let COL = Q.children[i];
-                    if (!COL) {
-                        COL = document.createElement('col');
-                        Q.appendChild(COL);
+                // section 0 - colgroup
+                if (einit || this.ref.tableColGroup) {
+                    let Q = E?.children?.[0];
+                    if (Q.childElementCount !== this.ncols)
+                        Q.innerHTML = '';
+                    let sum = 0;
+                    this.colorder.forEach(i => sum += ((this.col[i]?.visible ?? true) ? this.col[i].width : 0));
+                    for (let i = 0; i < this.ncols; i++) {
+                        let COL = Q.children[i];
+                        if (!COL) {
+                            COL = document.createElement('col');
+                            Q.appendChild(COL);
+                        }
+                        const cdef = this.col[this.colorder[i]];
+                        let w = Math.floor((cdef?.visible ?? true) ? cdef.width : 0);
+                        if (cdef?.visible ?? true) {
+                            COL.style.width = (sum > 0) ? (Math.floor(((w * 1000) / sum)) / 10 + '%') : '0';
+                            COL.style.visibility = 'visible';
+                        } else {
+                            COL.style.width = '0px';
+                            COL.style.visibility = 'collapse';
+                        }
                     }
-                    const cdef = this.col[this.colorder[i]];
-                    let w = Math.floor((cdef?.visible ?? true) ? cdef.width : 0);
-                    if (cdef?.visible ?? true) {
-                        COL.style.width = (sum > 0) ? (Math.floor(((w * 100) / sum)) + '%') : '0';
-                        COL.style.visibility = 'visible';
-                    } else {
-                        COL.style.width = '0px';
-                        COL.style.visibility = 'collapse';
-
-                    }
-                }
-                this.ref.tableColGroup = false;
-            }
-
-            // section 1 - thead
-            if (einit || this.ref.tableHeader) {
-                let Q = E?.children?.[1];
-                let TR = Q?.firstChild;
-                if (!TR) {
-                    TR = document.createElement('tr');
-                    TR = document.createElement('tr');
-                    Q.appendChild(TR);
+                    this.ref.tableColGroup = false;
                 }
 
+                // section 1 - thead
+                if (einit || this.ref.tableHeader) {
 
-                if (TR.childElementCount !== this.ncols)
-                    TR.innerHTML = '';
+                    let Q = E?.children?.[1];
 
-                for (let i = 0; i < this.ncols; i++) {
-                    let TH = TR.children[i];
-                    if (!TH) {
-                        TH = document.createElement('th');
-                        TH.className = 'wd-th';
-                        const D = document.createElement('div');
-                        D.setAttribute('role', 'button');
-                        D.setAttribute('tabindex', '0');
-                        D.className = 'wd-th-inner';
-                        D.appendChild(document.createElement('div'));
-                        D.appendChild(document.createElement('div'));
-                        D.appendChild(document.createElement('div'));
-
-                        TH.appendChild(D);
-                        TH.addEventListener('click', () => {
-                            toggleSort(i)
-
-                        })
-                        TR.appendChild(TH);
-                    }
-                    // TH.textContent = this.col[this.colorder[i]].title;
-                    setTH(TH, i);
-                }
-
-
-                this.ref.tableHeader = false;
-            }
-
-            // section 2 - tbody
-            if (einit || this.ref.tableBody) {
-
-                let Q = E?.children?.[2];
-                // number of rows in this data page
-                const nrows = Math.min(this.view.pageLength, this?.data?.data?.length ?? 0);
-                // dont have enougth <tr>'s
-                if (Q.childElementCount !== nrows) {
-                    Q.replaceChildren();
-                    for (let i = 0; i < nrows; i++)
-                        Q.appendChild(document.createElement('tr'));
-                }
-
-                for (let i = 0; i < nrows; i++) {
-
-                    let TR = Q.children[i];
-                    TR.innerHTML = '';
-                    for (let j = 0; j < this.ncols; j++)
-                        TR.appendChild(document.createElement('td'));
-
-                    let datrow = this.data.data[i];
-                    for (let j = 0; j < this.ncols; j++) {
-                        const TD = TR.children[j];
-                        TD.textContent = datrow[this.colorder[j]] ?? '';
+                    let TR = Q?.firstChild;
+                    if (!TR) {
+                        TR = document.createElement('tr');
+                        Q.appendChild(TR);
                     }
 
-                }
+                    if (TR.childElementCount !== this.ncols)
+                        TR.innerHTML = '';
 
+                    for (let i = 0; i < this.ncols; i++) {
+                        let TH = TR.children[i];
+                        if (!TH) {
+                            TH = document.createElement('th');
+                            TH.className = 'wd-th';
+                            const D = document.createElement('div');
+                            D.setAttribute('role', 'button');
+                            D.setAttribute('tabindex', '0');
+                            D.className = 'wd-th-inner';
+                            D.appendChild(document.createElement('div'));
+                            D.appendChild(document.createElement('div'));
+                            D.appendChild(document.createElement('div'));
 
-                this.ref.tableBody = false;
+                            TH.appendChild(D);
+                            TH.addEventListener('click', () => {
+                                toggleSort(i)
 
-            }
-
-
-            // section 3 - tfoot
-            if (einit || this.ref.tableFooter) {
-
-                let Q = E?.children?.[3];
-                let TR = Q?.firstChild;
-                if (!TR) {
-                    TR = document.createElement('tr');
-                    Q.appendChild(TR);
-                }
-
-                if (TR.childElementCount !== this.ncols)
-                    TR.innerHTML = '';
-
-                for (let i = 0; i < this.ncols; i++) {
-                    let TD = TR.children[i];
-                    if (!TD) {
-                        TD = document.createElement('th');
-                        TD.className = 'wd-tf';
-                        TR.appendChild(TD);
+                            })
+                            TR.appendChild(TH);
+                        }
+                        // TH.textContent = this.col[this.colorder[i]].title;
+                        setTH(TH, i);
                     }
-                    // TD.textContent = this.col[this.colorder[i]].title;
-                    TD.textContent = '';
+
+
+                    this.ref.tableHeader = false;
                 }
 
-                this.ref.tableFooter = false;
+                // section 2 - tbody
+                if (einit || this.ref.tableBody) {
+
+                    let Q = E?.children?.[2];
+
+                    // number of rows in this data page
+                    const nrows = Math.min(this.view.pageLength, this?.data?.data?.length ?? 0);
+
+                    if (nrows > 0) {
+                        // make sure we have nrows
+                        if (nrows !== Q?.childElementCount)
+                            Q.innerHTML = '<tr class="wd-tr"></tr>'.repeat(nrows);
+
+                        let col_html = '';
+                        if (Q.firstElementChild?.childElementCount !== this.ncols)
+                            col_html = '<td class="wd-td"></td>'.repeat(this.ncols);
+
+                        for (let j = 0; j < nrows; j++) {
+
+                            let TR = Q?.children[j];
+                            if (col_html)
+                                TR.innerHTML = col_html;
+
+                            let datarow = this?.data?.data[j];
+                            if (datarow) {
+                                for (let i = 0; i < this.ncols; i++) {
+                                    let TD = TR?.children[i];
+                                    const ord = this.colorder[i];
+                                    const cdef = this.col[ord];
+                                    setTD(TD, cdef, datarow[ord]);
+                                }
+                            }
+                        }
+                    } else
+                        Q.innerHTML = `
+                          <tr>
+                            <td colspan=${this.ncols}>NO DATA</td>
+                          </tr>`;
+
+
+                    this.ref.tableBody = false;
+                    this.ref.highlight = false;
+                }
+
+
+                // section 3 - tfoot
+                if (einit || this.ref.tableFooter) {
+
+                    let Q = E?.children?.[3];
+                    let TR = Q?.firstChild;
+                    if (!TR) {
+                        TR = document.createElement('tr');
+                        Q.appendChild(TR);
+                    }
+
+                    if (TR.childElementCount !== this.ncols)
+                        TR.innerHTML = '';
+
+                    for (let i = 0; i < this.ncols; i++) {
+                        let TD = TR.children[i];
+                        if (!TD) {
+                            TD = document.createElement('th');
+                            TD.className = 'wd-tf';
+                            TR.appendChild(TD);
+                        }
+
+                        TD.textContent = '';
+                    }
+
+                    this.ref.tableFooter = false;
+
+                }
 
             }
-
-        })
+        )
 
         this.ref.tableBlock = false;
     }
@@ -713,13 +831,51 @@ class wdTable {
     updateFooterBlock() {
 
         this.makeBlock(this.T1, 'foot', 'div', (E, einit) => {
-            if (einit)
-                E.className = 'wd-table-section wd-foot-block';
 
-            if ( einit || this.ref.footPageInfo ) {
+            if (einit) {
 
+                E.className = 'wd-table-section wd-footer-block';
+                E.innerHTML = `
+                  <div class="wd-foot-page-info-div">
+                    <input type="number" min="1" class="page-input"/>
+                    <span></span>
+                  </div>
+                  <div class="wd-foot-page-list-div">
+                  </div>`;
+
+                const I = E?.children[0]?.children[0];
+
+                I.addEventListener('change', _wd_debounce((e) => {
+                    const val = Math.max(1, parseInt(e.target.value) || 1);
+                    this.view.page = val - 1;
+                    this.fetchPage();
+                }, 200));
             }
+
+            if (einit || this.ref.footPageInfo) {
+                //
+                const Q1 = E?.children?.[0];
+                if (Q1) {
+                    const S1 = Q1?.children[0];
+                    const S2 = Q1?.children[1];
+                    S1.value = this.view.page + 1;
+                    S1.setAttribute('max', this.view.npages);
+                    S2.textContent = ' of ' + this.view.npages;
+                }
+
+
+                this.ref.footPageInfo = false;
+            }
+
+            if (einit || this.ref.footPageList) {
+
+                this.ref.footPageList = false;
+            }
+
+            E.style.display = (this.view.npages > 0) ? 'block' : 'none';
+
         });
+
         this.ref.footBlock = false;
     }
 
@@ -728,8 +884,9 @@ class wdTable {
         if (this.ref.all) {
             this.ref.capBlock = true;
             this.ref.headBlock = true;
+            this.ref.qbarBlock = true;
             this.ref.tableBlock = true;
-            this.ref.footBlock = true ;
+            this.ref.footBlock = true;
         }
 
         if (this.ref.capBlock)
@@ -744,6 +901,10 @@ class wdTable {
         if (this.ref.headBlock || this.ref.headPageLen || this.ref.headSearchBar || this.ref.headControl)
             this.updateHeaderBlock();
 
+
+        if (this.ref.qbarBlock)
+            this.updateQbarBlock();
+
         if (this.ref.tableBlock) {
             this.ref.tableColGroup = true;
             this.ref.tableHeader = true;
@@ -754,13 +915,13 @@ class wdTable {
         if (this.ref.tableBlock || this.ref.tableColGroup || this.ref.tableHeader || this.ref.tableBody || this.ref.tableFooter)
             this.updateTableView();
 
-        if ( this.ref.footBlock ) {
-            this.ref.footPageInfo = true ;
-            this.ref.footPageList = true ;
+        if (this.ref.footBlock) {
+            this.ref.footPageInfo = true;
+            this.ref.footPageList = true;
         }
 
-        if ( this.ref.footPageInfo || this.ref.footPageList )
-            this.updateFooterBlock() ;
+        if (this.ref.footPageInfo || this.ref.footPageList)
+            this.updateFooterBlock();
 
 
         this.ref.all = false;

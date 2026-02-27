@@ -15,11 +15,19 @@
 }
 
 .button-hover {
+  @media (hover: hover) {
+    &:not(:disabled):hover {
+      @apply transition-all duration-300;
+      @apply rounded-md scale-110 shadow border border-black;
+    }
 
-  &:not(:disabled):hover {
-    @apply transition-all duration-300
-    active:bg-gray-100/70
-    active:transition-colors;
-    @apply hover:rounded-md hover:scale-110 hover:shadow hover:border hover:border-black;
+    &:not(:disabled):active {
+      @apply bg-gray-100/70 transition-colors;
+    }
+  }
+
+  /* Fallback for touch devices - only show active state */
+  &:not(:disabled):active {
+    @apply bg-gray-100/70 transition-colors;
   }
 }

@@ -1,20 +1,84 @@
 {
   "table": {
-    "version" : 1 ,
-    "ajax"  : { "url": "https://api.usedlobster.test/api/v1/table/users" } ,
-    "title" : "List of Users" ,
-    "columns": [
-      { "field" : "sid"    , "title" : "ID"        , "width": 2 ,  "sortable": false
-      } ,
-      { "field" : "level"  , "title" : "Level"     , "width": 2 },
-      { "field" :  "uname" , "title" : "Username"  , "width": 10 },
-      { "field" :  "fname" , "title" : "Firstname" , "width": 10 },
-      { "field" :  "lname" , "title" : "Lastname"  , "width": 10 },
-      { "field" :  "role" , "title" : "Role"       , "width": 10   , "moveable" : false , "exportable" : false    },
-      { "field" :  "ccode" , "title" : "Code"      , "width": 1   } ,
-      { "field" :  "cname" , "title" : "Company"   , "width": 20   }
-
+    "version": 1,
+    "ajax": {
+      "url": "https://api.usedlobster.test/api/v1/table/users"
+    },
+    "qbar": [
+      {
+        "type" : "btn",
+        "name" : "Add User"
+      },
+      {
+        "type": "btn" ,
+        "name": "Refresh"
+      },
+      {
+        "type": "radio",
+        "default": 0 ,
+        "filters": [
+          {
+            "name": "All",
+            "value": 0
+          },
+          {
+            "name": "Active" ,
+            "value": 1
+          },
+          {
+            "name": "Inactive",
+            "value": -1
+          }
+        ]
+      }
     ],
-    "order" : []
+    "title": "List of Users",
+    "columns": [
+      {
+        "field": "sid",
+        "title": "ID",
+        "width": 2,
+        "sortable": false,
+        "type": "button"
+      },
+      {
+        "field": "level",
+        "title": "Level",
+        "width": 2
+      },
+      {
+        "field": "uname",
+        "title": "Username",
+        "width": 10
+      },
+      {
+        "field": "fname",
+        "title": "Firstname",
+        "width": 10
+      },
+      {
+        "field": "lname",
+        "title": "Lastname",
+        "width": 10
+      },
+      {
+        "field": "role",
+        "title": "Role",
+        "width": 10,
+        "moveable": false,
+        "exportable": false
+      },
+      {
+        "field": "ccode",
+        "title": "Code",
+        "width": 1
+      },
+      {
+        "field": "cname",
+        "title": "Company",
+        "width": 20
+      }
+    ],
+    "order": []
   }
 }
