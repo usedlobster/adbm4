@@ -267,7 +267,7 @@ class wdTable {
         this.T0 = document.getElementById(divid)
         try {
             if (this.T0 && this.T0?.tagName === 'DIV') {
-                this.T0.replaceChildren();
+                this.T0.innerHTML = '' ;
                 this.view = {page: 0, pageLength: 10, search: ''};
                 this.ref = {refresh: 0, all: true, highlight: true};
                 this.data = {data: [], offset: 0, total: 0};
@@ -341,7 +341,7 @@ class wdTable {
         return d;
     }
 
-    tableAction(act, k, v) {
+    tableModalAction(act, k, v) {
 
         const moveModalRow = (k, v, dir) => {
             if (v >= 0) {
@@ -545,7 +545,7 @@ class wdTable {
                         Q.addEventListener('click', () => {
                             _wd_open_modal_template(this.MODAL,
                                 'table_modal',
-                                (act, k, v) => this.tableAction(act, k, v));
+                                (act, k, v) => this.tableModalAction(act, k, v));
 
                         })
                     }

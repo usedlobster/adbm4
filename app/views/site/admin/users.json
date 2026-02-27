@@ -1,4 +1,11 @@
 {
+  "form": {
+    "version": 1,
+    "ajax": {
+      "url": "https://api.usedlobster.test/api/v1/form/users/?"
+    },
+    "title": "Edit User"
+  },
   "table": {
     "version": 1,
     "ajax": {
@@ -6,23 +13,20 @@
     },
     "qbar": [
       {
-        "type" : "btn",
-        "name" : "Add User"
-      },
-      {
-        "type": "btn" ,
-        "name": "Refresh"
+        "type": "btn",
+        "name": "Add User",
+        "action": "edit"
       },
       {
         "type": "radio",
-        "default": 0 ,
+        "default": 0,
         "filters": [
           {
             "name": "All",
             "value": 0
           },
           {
-            "name": "Active" ,
+            "name": "Active",
             "value": 1
           },
           {

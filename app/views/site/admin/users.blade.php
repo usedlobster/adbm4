@@ -1,6 +1,8 @@
 @extends( 'layout.app' )
 @section( 'app-script' )
+    <script src="/js/wd/wdTableForm.min.js?q={{_BUILD}}"></script>
     <script src="/js/wd/wdTable.min.js?q={{_BUILD}}"></script>
+    <script src="/js/wd/wdForm.min.js?q={{_BUILD}}"></script>
 @endsection
 @section( 'app' )
     @include( 'layout.modal.table' )
@@ -21,9 +23,9 @@
 {{--        </button>--}}
 {{--    </div>--}}
 
-    <div id="users" class="m-0 w-full h-full wd-table"></div>
+    <div id="users">Loading...</div>
 @endsection
 @section( 'app-exec' )
-        new wdTable( 'users' , {!!( $mvc?->_json ?? 'null' ) !!} ) ;
+        new wdTableForm( 'users' , {!!( $mvc?->_json ?? 'null' ) !!}  , {{ $id ?? 0 }}) ;
 @endsection
 
