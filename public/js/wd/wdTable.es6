@@ -228,7 +228,7 @@ class wdTable {
                 search: this.view.search ?? '',
             };
 
-            console.log('fetchNewData: payload = ', payload);
+
 
             // simple fetch + callback
             _wd_api_fetch(this.cfg.ajax?.url, payload, (res) => {
@@ -246,8 +246,8 @@ class wdTable {
 
         } catch (e) {
             this.showLoading(false);
-            console.log(e);
-            alert(e);
+
+
         }
 
 
@@ -259,8 +259,9 @@ class wdTable {
 
     makeBlock = (base, name, tag, cb) => _wd_make_block(base, name, tag, cb);
 
-    constructor(divid, jobj) {
+    constructor(divid, jobj , tf ) {
 
+        this.TF  = tf ;
         if (!divid || !jobj || 'string' !== typeof divid || 'object' !== typeof jobj)
             throw new Error('Invalid arguments')
 
@@ -272,16 +273,16 @@ class wdTable {
                 this.ref = {refresh: 0, all: true, highlight: true};
                 this.data = {data: [], offset: 0, total: 0};
                 this.cfg = jobj?.table;
-                this.setupTABLE();
-                this.setupMODAL();
-                this.setupINNER();
+                this.setupTABLE() ;
+                this.setupMODAL() ;
+                this.setupINNER() ;
 
             } else
                 throw new Error('Invalid Divid')
 
         } catch (e) {
-            console.log(e)
-            alert(e);
+
+
 
         }
 
@@ -394,7 +395,6 @@ class wdTable {
                         usr.sort = 0;
 
                 }
-
 
             }
         }
@@ -517,6 +517,7 @@ class wdTable {
                 this.makeBlock(E, 'search', 'input', (Q, qinit) => {
                     if (qinit) {
                         Q.className = 'wd-search-box';
+
                         Q.setAttribute('type', 'text');
                         Q.setAttribute('placeholder', 'Search');
                         Q.setAttribute('spellcheck', 'off');
@@ -586,6 +587,8 @@ class wdTable {
                             case 'btn' :
                                 B.innerHTML = '<button class="wd-qbtn">' + q.name + '</button>';
                                 B.addEventListener('click', () => {
+                                    if ( this?.TF )
+                                        this.TF.showForm( -1 ) ;
 
 
                                 })
@@ -837,7 +840,7 @@ class wdTable {
                 E.className = 'wd-table-section wd-footer-block';
                 E.innerHTML = `
                   <div class="wd-foot-page-info-div">
-                    <input type="number" min="1" class="page-input"/>
+                    <input id="__" type="number" min="1" class="page-input"/>
                     <span></span>
                   </div>
                   <div class="wd-foot-page-list-div">

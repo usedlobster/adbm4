@@ -21,17 +21,11 @@
         </div>
     </div>
     <script src="/boot/auth.php"></script>
-    <script>
-
-        document.addEventListener('DOMContentLoaded', () => {
-            @yield( 'app-exec' ) ;
-        })
-    </script>
+    @yield( 'app-exec' ) ;
     </body>
 @endsection
 
 @section( 'script' )
-
     <script src="/js/wd/adbmpage.min.js"></script>
     @yield( 'app-script' )
 @endsection

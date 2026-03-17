@@ -12,6 +12,7 @@
         {
             if ( !is_string( $username ) || empty( $username ) )
                 return false;
+
             if ( !preg_match( '/^[a-zA-Z][a-zA-Z0-9_-]{3,50}$/' , $username ) )
                 return false;
             return true;
@@ -21,7 +22,7 @@
         {
             if ( !is_string( $otp ) || empty( $otp ) )
                 return false;
-            if ( !preg_match( '/^[1-9A-HJ-NPRSTVWXYZ]{4}-[1-9A-HJ-NPRSTVWXYZ]{4}/' , strtoupper( $otp ) ) )
+            if ( !preg_match( '/^[1-9A-HJ-NPRSTVWXYZ]{4}-[1-9A-HJ-NPRSTVWXYZ]{4}$/' , strtoupper( $otp ) ) )
                 return false;
 
             return true;

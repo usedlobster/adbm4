@@ -6,6 +6,7 @@
      * @method static Get0( string $param  , string[] $array )
      * @method static GetAll0( string $sql , string[] $array )
      * @method static GetAllN( string $sql , string[] $array )
+     * @method static Col($q , $n , $args = [])
      * @method static error() : string
      * @method static Exec(string $string , array $array = [] )
      * @method static LockExec(string $string , array $array = [] , string $lock = '')

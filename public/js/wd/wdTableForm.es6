@@ -1,15 +1,20 @@
 
 class wdTableForm {
 
-    constructor ( divid , json , id )
+    wTable = null ;
+    wForm  = null ;
+
+    constructor ( divid , json , id = null  )
     {
         this.TF = document.getElementById(divid)
         if ( !this.TF )
             return
 
+        this.TF.cfg = json ;
         this.TF.innerHTML = '' ;
         if ( json?.table ) {
-            this.T = document.createElement('div');
+            this.T = document.createElement
+            ('div');
             this.T.id = divid + '_T' ;
             this.T.style.display = 'none' ;
             this.TF.appendChild(this.T);
@@ -27,16 +32,34 @@ class wdTableForm {
             this.F = null ;
 
 
+        this.wTable = ( this.T && (typeof wdTable !== 'undefined' )) ? new wdTable( this.T.id , json , this ) : null ;
+        this.wForm  = ( this.F && (typeof wdForm  !== 'undefined' )) ? new  wdForm( this.F.id , json , this ) : null ;
 
+        if ( this.wForm && id !== null  ) {
+            this.wForm.show( id ) ;
+            this.showForm( id ) ;
+        }
+        else if ( this.wTable && id === null  ) {
 
-        this.TABLE = ( this.T && (typeof wdTable !== 'undefined' )) ? new wdTable( this.T.id , json )   : null ;
-        this.FORM  = ( this.F && (typeof wdForm  !== 'undefined' )) ? new wdForm( this.F.id , json , id ) : null ;
-
-        // if ( !this.TABLE || !this.FORM )
-        //     throw new Error('wdTableForm: wdTable or wdForm not found') ;
-
+        }
+        else
+            this.TF.innerHTML = '<div class="alert alert-danger">Loading</div>' ;
 
     }
 
-}
+    showForm( id ) {
+        if ( this.T )
+            this.T.style.display = 'none' ;
+        if ( this.F )
+            this.F.style.display = 'block' ;
+    }
 
+    showTable( ) {
+        if ( this.F )
+            this.F.style.display = 'none' ;
+        if ( this.T )
+            this.T.style.display = 'block' ;
+    }
+
+
+}

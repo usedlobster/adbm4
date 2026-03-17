@@ -1,10 +1,69 @@
 {
   "form": {
     "version": 1,
+
     "ajax": {
-      "url": "https://api.usedlobster.test/api/v1/form/users/?"
+      "url":"https://api.usedlobster.test/api/v1/form/users" ,
+      "key" : "sid"
     },
-    "title": "Edit User"
+    "title": "Edit User",
+    "layout" : {
+      "id" : "uf" ,
+      "pages" : [
+        {
+          "sections": [
+            {
+              "elements": [
+                {
+                  "type": "text",
+                  "field": "u.sid" ,
+                  "key" : true ,
+                  "hidden" : true
+                },
+                {
+                  "type" : "text" ,
+                  "field" : "uname",
+                  "label" : "Account Name",
+                  "primary" : true
+                } ,
+                {
+                  "type": "number",
+                  "field": "level",
+                  "label": "Level"
+                },
+
+                {
+                  "type" : "text" ,
+                  "field" : "fname",
+                  "label" : "First Name"
+                } ,
+                {
+                  "type" : "text" ,
+                  "field" : "lname",
+                  "label" : "Last Name"
+                } ,
+                {
+                  "type"  : "select" ,
+                  "field" : "cid",
+                  "label" : "Company",
+
+                  "datasrc" : {
+                      "type" : "named",
+                      "name" : "clist"
+
+                  }
+                },
+                {
+                  "type" : "text" ,
+                  "field" : "roles",
+                  "label" : "Role"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "table": {
     "version": 1,
@@ -66,7 +125,7 @@
         "width": 10
       },
       {
-        "field": "role",
+        "field": "rname",
         "title": "Role",
         "width": 10,
         "moveable": false,

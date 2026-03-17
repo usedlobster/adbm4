@@ -1,16 +1,16 @@
 @extends('auth.authbase' , ['title'=>'Request Reset'])
 @section('form')
 
-    @if ( empty( $errormsg ) )
-    @component('snip.info-block')
+
+    @component('snip.info-block',['noclose'=>true])
         <div>
-            Enter your login account name belows, to enter a current reset code , or request a new one.
+           To get sent a reset code, or enter one received recently , enter your account name below.
         </div>
     @endcomponent
-    @endif
 
     <div class="form-panel">
-        @include( 'snip.input' , [ 'id'=>'username' ,  'placeholder'=>'Account Name' ,  'value'=>$_POST['username'] ?? '' , 'label'=>'Account Name(i)','info'=>'Usually this will be your email address'])
+        @include( 'snip.input' , [ 'id'=>'username' ,  'placeholder'=>'Account Name' ,  'value'=>$_POST['username'] ?? '' , 'label'=>'Account Name(i)',
+                'info'=>'HINT:Usually this is your email address, but check previous email correspondence'])
     </div>
 
 @endsection

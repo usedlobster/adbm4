@@ -15,7 +15,9 @@
 }
 
 @layer utilities {
-  @import 'adbm/form'  ;
+
+  @import 'adbm/form1' ;
+  @import 'adbm/info' ;
   @import 'adbm/table' ;
   @import 'adbm/modal' ;
 

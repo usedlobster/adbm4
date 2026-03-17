@@ -11,7 +11,7 @@ trait AuthLoginViewTrait {
 
 
         if ( ($user->sid ?? 0) < 1) {
-            $errormsg = '';
+            $errormsg = '' ;
 
             if (isset($_POST['_login']) && $this->checkCSRF()) {
                 $errormsg = $this->doLogin($_POST['username'], $_POST['password']);
@@ -28,14 +28,17 @@ trait AuthLoginViewTrait {
             // no project selected
             $errormsg = '';
             // get list of available , projects
-            $list = $this->getProjects($user->sid);
-            if (isset($_POST['_pickprj']) && \app\wd\AppMaster::checkCSRF()) {
+            $result = $this->doGetProjectList($user->sid) ?? [] ;
+            $list = $result->list ?? [] ;
+
+
+            if (isset($_POST['_pickprj']) && $this->checkCSRF()) {
                 // submit pressed
                 $pick = $_POST['prj'] ?? 0;
                 if ($pick > 0) {
                     $errormsg = $this->doChangeProject($user->sid, $pick);
                     if (empty($errormsg) && (($user->pid ?? 0) > 0)) {
-                        header('Location: '.$_SERVER['REQUEST_URI']);
+                        header('Location: '. $_SERVER['REQUEST_URI']);
                         exit;
                     }
                 }
@@ -44,6 +47,8 @@ trait AuthLoginViewTrait {
             }
 
             $this->showBlade('auth.project', ['errormsg' => $errormsg ?? false, 'list' => $list]);
+
+
         }
     }
 
@@ -56,6 +61,9 @@ trait AuthLoginViewTrait {
                 $this->showBlade('auth.signout') ;
                 exit;
             case 'cancel' :
+                header('Location: /');
+                exit;
+            case 'cancel-reset':
                 $this->setLogin( null ) ;
                 header('Location: /');
                 exit;

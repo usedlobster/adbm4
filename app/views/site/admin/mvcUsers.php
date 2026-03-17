@@ -14,8 +14,7 @@ class mvcUsers extends ModelViewBase
         $id = ( count($parts) > 1 ) ? $parts[1] : 0 ;
         $b = \app\wd\AppMaster::app()->getBlade();
         $b->share('mvc', $this);
-        echo $b->runChild('site.admin.users' , ['id'=>$id ]);
-
+        echo $b->runChild('site.admin.users' , [ 'id'=>$id ]);
         $b->share('mvc', null);
 
         return true;

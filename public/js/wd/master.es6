@@ -117,9 +117,7 @@ async function _wd_api_fetch(url, payload = {}, callBack = null, isRetry = false
 
         if (response?.ok === true) {
             result = await response.json();
-
             if (result?.expired === true) {
-
                 if (!isRetry) {
                     if (await _wd_refresh_token_request())
                         return _wd_api_fetch(url, payload, callBack, true);
@@ -243,7 +241,6 @@ class wdTextHighlighter {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
     constructor(options = {}) {
-        console.log('options', options);
         this.highlightClass = options.className || '';
         this.highlightStyle = options.style || '';
     }

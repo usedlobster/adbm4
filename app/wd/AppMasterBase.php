@@ -28,7 +28,6 @@ class AppMasterBase extends AppLogin {
     {
         $t = [ $base , ...$parts ?? []];
         $rkey = 'view:'. serialize( $t ) ;
-
         $red = \sys\Redis::getRedis(  ) ;
         if ( $red ) {
             if ( $red->exists( $rkey )) {

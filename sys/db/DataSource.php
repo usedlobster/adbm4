@@ -17,6 +17,10 @@ class DataSource
 
     private array $_params;
 
+    private array $_listfn ;
+
+
+
     public array $_order;
 
     private string $_limit;
@@ -33,9 +37,11 @@ class DataSource
         $this->_joins = [];
         $this->_from = '';
         $this->_where = '';
-        $this->_params = [];
-        $this->_order = [];
-        $this->_limit = '';
+        $this->_params = [] ;
+        $this->_listfn = [] ;
+        $this->_order = []  ;
+        $this->_limit = ''  ;
+
     }
 
     public function db($name)
@@ -102,6 +108,16 @@ class DataSource
     {
         $this->params[] = $value;
         return $this;
+    }
+
+    public function listfn( $name , $c )
+    {
+        if ( !isset( $this->_listfn[$name] ))
+            $this->_listfn[$name] = $c ;
+        else
+            throw new \Exception("List function $name already defined");
+
+        return $this ;
     }
 
     public function close()
@@ -184,6 +200,15 @@ class DataSource
     {
         return $this->getTerm($cdef);
     }
+
+
+    public function getDataList( $named ) : array | null {
+       if ( $this->_listfn[ $named ] ?? false )
+           return $this->_listfn[ $named]( $this , $named  ) ; //
+
+       return null ;
+    }
+
 
 
 

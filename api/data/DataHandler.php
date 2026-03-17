@@ -4,10 +4,12 @@ namespace api\data;
 
 use sys\db\SQL;
 
-class DataHandler
+abstract class DataHandler
 {
 
-    public function __construct() {}
+    public function __construct() {
+
+    }
 
     private function getF(\sys\db\DataSource $dc, $field ) : string
     {
@@ -33,15 +35,24 @@ class DataHandler
         return '""';
     }
 
-
-    private function getSelect($dc, $p) : string
-    {
+    private function getFields( $dc , $a ) {
         $s = [];
-        foreach (array_column($p->defs, 'field') as $field) {
+        foreach ($a as $field) {
             $s[] = $this->getF($dc, $field);
         }
         return join(',', $s);
     }
+
+    private function getSelect($dc, $defs ) : string
+    {
+//        $s = [];
+//        foreach (array_column($defs , 'field') as $field) {
+//            $s[] = $this->getF($dc, $field);
+//        }
+//        return join(',', $s);
+        return $this->getFields( $dc , array_column($defs , 'field') );
+    }
+
 
     private function getLimit($p) : string
     {
@@ -113,15 +124,32 @@ class DataHandler
             }
         }
         return [ trim($s , ' OR ' ), $params ] ;
+    }
+
+    public function getPick( $dc , $p ) {
+
+        $s = '' ; $params = [] ; $kv = $p->keyvals ?? [] ;
+        foreach( $p->prikeys as $k ) {
+            $v = array_shift( $kv ) ;
+            $f = $dc->getWhereTerm($k);
+            if ( !empty($f)) {
+                $s .= " AND {$f} = ?";
+                $params[] = $v;
+            }
+        }
+
+        return [ trim( $s , ' AND ' ) , $params] ;
+
 
 
     }
+
 
     public function getTable(\sys\db\DataSource $dc, $p)
     {
 
         $ext = [
-            'fields' => $this->getSelect($dc, $p),
+            'fields' => $this->getSelect($dc, $p->defs ?? [] ),
             'limit'  => $this->getLimit($p),
             'sort'   => $this->getSort($dc, $p),
             'search' => $this->getSearch( $dc , $p ) ,
@@ -129,15 +157,15 @@ class DataHandler
         ];
 
         if ($dc->database)
-            \sys\db\SQL::setDB($dc->database);
+            SQL::setDB($dc->database);
 
         [$sql, $params] = $dc->buildCOUNT($ext);
-        $n = \sys\db\SQL::Get0($sql, $params ?? []);
-        if (empty( \sys\db\SQL::error())) {
+        $n = SQL::Get0($sql, $params ?? []);
+        if (empty( SQL::error())) {
 
             [$sql, $params] = $dc->buildSELECT($ext);
-            $data = \sys\db\SQL::GetAll0($sql, $params ?? []);
-            if ( empty(\sys\db\SQL::error())) {
+            $data = SQL::GetAll0($sql, $params ?? []);
+            if ( empty(SQL::error())) {
                 return ['data' => $data,
                         'total'=> (int)$n ,
                         'offset'=>$p->offset ,
@@ -146,9 +174,52 @@ class DataHandler
             }
         }
 
-        return ['error'=>\sys\db\SQL::error()];
+        return ['error'=> SQL::error()];
 
 
     }
 
+    private function getLists( $dc , $p ) {
+
+        $lists = [] ;
+        if ( is_array($p?->sources) ) {
+            foreach ($p->sources as $src) {
+                $lists[$src] = $dc->getDataList($src);
+            }
+        }
+        return $lists ;
+    }
+
+
+    //  allow
+    public function getFormData(\sys\db\DataSource $dc, $p )
+    {
+
+        if ( empty( $p->fields ) || empty($p->prikeys ) || empty( $p->keyvals ))
+            return null ;
+
+        $ext = [
+            'fields' => $this->getFields( $dc , $p->fields ),
+            'search' => $this->getPick( $dc , $p )
+        ];
+
+        if ($dc->database)
+            SQL::setDB($dc->database);
+
+        [$sql, $params] = $dc->buildSELECT($ext);
+        $data = SQL::Row0($sql, $params ?? [])  ;
+
+        if ( empty(SQL::error())) {
+            return [
+                'data' => $data,
+                'lists' => $this->getLists( $dc , $p ) ,
+                'refresh' => $p->refresh ?? -1
+            ];
+        }
+
+        return ['error'=> SQL::error()];
+    }
+
+    abstract public function form( $payload , $parts ) ;
+    abstract public function table( $payload , $parts ) ;
 }
