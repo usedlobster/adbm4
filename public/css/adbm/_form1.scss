@@ -5,11 +5,15 @@
   }
 
   .wd-label {
-    @apply block text-sm font-bold  text-gray-700 ;
+    @apply block text-sm font-bold  text-gray-700;
   }
 
   .wd-input {
     @apply mt-1 block w-full rounded-md disabled:border-none disabled:bg-gray-100 disabled:text-gray-500 shadow-lg;
+  }
+
+  .wd-input-error {
+    @apply bg-red-100/50 border-red-500 border-2 focus:border-red-500 focus:ring-2 focus:ring-red-500 ;
   }
 
   .wd-select {

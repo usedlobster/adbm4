@@ -18,6 +18,27 @@ function _wd_debounce(func, delay, delay2 = null) {
     };
 }
 
+async function _wd_have_passkey( ){
+    try {
+        // Attempt to get a credential. If the browser has passkeys, it will proceed.
+        // We're not validating a real login here, just checking if the API call works.
+        await navigator.credentials.get({
+            publicKey: {
+                challenge: new Uint8Array(32), // Dummy challenge
+                rpId: "usedlobster.test" // Your Relying Party ID
+            }
+        });
+        return true; // If no error, authentication is supported
+    } catch (error) {
+        // If an error occurs (e.g., NotSupportedError, AbortError), authentication might not be supported or user cancelled.
+        console.error("Passkey authentication check failed:", error);
+        return false;
+
+    }
+}
+
+
+
 
 function _wd_wrap_click_event(e, singleClickFn, doubleClickFn, delay = 400) {
 
@@ -227,7 +248,6 @@ function _wd_close_modal_template(MODAL ) {
     }
 }
 
-
 class wdTextHighlighter {
 
     escapeHtml(text) {
@@ -263,3 +283,6 @@ class wdTextHighlighter {
         );
     }
 }
+
+
+

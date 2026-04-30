@@ -1,16 +1,1 @@
-# api
-700 , Api System Failure ,
-701 , Endpoint not found
-702 , SQL Failed ?0
-
-#
-800 , System Offline or Unreachable
-801 ,
-802 , Invalid or Expired Reset Code
-803 , Bad Password
-804 , Invalid Account Name
-
-# user login
-900 , System Offline
-901 , Invalid username or password
-902 , Project Not Available Now
+LOGIN_ACCOUNT_NAME    , "Account name empty or invalid"

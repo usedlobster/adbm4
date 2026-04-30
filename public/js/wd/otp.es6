@@ -1,90 +1,95 @@
 document.addEventListener('alpine:init', () => {
 
-  Alpine.data('otpCode', (v) => ({
+    Alpine.data('otpCode', (v, len = 8, reg = /[1-9A-Za-z]/) => ({
 
-    input: 0,
-    otp_length: 8,
-    value: v || '',
+        input: 0,
+        otp_length: len,
+        value: v || '',
+        otp_regex: reg,
 
-    get inputs() {
-      return this.$refs.otpInputContainer.querySelectorAll('.otpInput');
-    },
+        get inputs() {
+            return this.$refs.otpInputContainer.querySelectorAll('.otpInput');
+        },
 
-    init() {
+        init() {
+            this.$nextTick(() => {
+                this.inputs?.[0]?.focus();
+                this.setInput(this.value);
+            });
+        } ,
 
-      setTimeout(() => {
-        this.setInput(this.value);
-      }, 10);
+        validateKeyPress(e) {
+            // Handle Ctrl+V (or Cmd+V on Mac)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                return;
+            }
 
-    },
+            // Allow backspace, tab, arrows
+            if (['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                return;
+            }
 
-    validateKeyPress(e) {
-      // Handle Ctrl+V (or Cmd+V on Mac)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-        return; // Let the paste event handler deal with it
-      }
+            if (!this.otp_regex.test(e.key)) {
+                e.preventDefault();
+            }
+        },
 
-      // Allow bvackspace, tab, arrows
-      if (['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        return;
-      }
-      //
-      if (!/^[1-9A-Za-z]$/.test(e.key)) {
-        e.preventDefault();
-      }
-    },
-    handleInput(e, index) {
-      // Validate numeric input
-      const input = e.target.value;
-      const digit = input.match(/[1-9A-Za-z]/) ? input : '';
-      e.target.value = digit;
+        handleInput(e, index) {
+            const input = e.target.value;
+            const match = input.match(this.otp_regex);
+            const digit = match ? match[0] : '';
+            e.target.value = digit;
 
-      const inputValues = [...this.inputs].map(input => input.value);
-      this.value = inputValues.join('');
+            const inputValues = [...this.inputs].map(input => input.value);
+            this.value = inputValues.join('');
 
-      if (digit) {
-        const nextInput = this.inputs[index + 1];
-        if (nextInput) {
-          nextInput.focus();
-          nextInput.select();
-        }
-      }
-    },
+            if (digit) {
+                const nextInput = this.inputs[index + 1];
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                }
+            }
+        },
 
-    setInput(v) {
+        setInput(v) {
+            const clean = (v || '')
+                .replace(new RegExp(`[^${this.otp_regex.source}]`, 'g'), '')
+                .slice(0, this.otp_length);
 
-      const paste = v.replace(/[^1-9A-Za-z]/g, '').slice(0, this.otp_length);
+            [...clean].forEach((char, i) => {
+                if (this.inputs[i]) {
+                    this.inputs[i].value = char;
+                }
+            });
 
-      // Fill in the inputs
-      [...paste].forEach((char, i) => {
-        if (this.inputs[i]) {
-          this.inputs[i].value = char;
-        }
-      });
+            this.value = [...this.inputs].map(input => input.value).join('');
+        },
 
-      // Update the hidden input value
-      this.value = [...this.inputs].map(input => input.value).join('');
+        handlePaste(e) {
+            e.preventDefault();
 
-    }
-    ,
+            const paste = (e.clipboardData.getData('text') || '')
+                .split('')
+                .filter(ch => {
+                    this.otp_regex.lastIndex = 0;
+                    return this.otp_regex.test(ch);
+                })
+                .join('')
+                .slice(0, this.otp_length);
 
-    handlePaste(e) {
-      e.preventDefault();
-      const paste = e.clipboardData.getData('text').replace(/[^1-9A-Za-z]/g, '').slice(0, this.otp_length);
-      this.setInput(paste);
-      // Focus the next empty input or the last filled one
-      const nextEmptyIndex = [...this.inputs].findIndex(input => !input.value);
-      const focusIndex = nextEmptyIndex === -1 ? this.otp_length - 1 : nextEmptyIndex;
-      this.inputs[focusIndex]?.focus();
+            this.setInput(paste);
 
-    }
-    ,
+            const nextEmptyIndex = [...this.inputs].findIndex(input => !input.value);
+            const focusIndex = nextEmptyIndex === -1 ? this.otp_length - 1 : nextEmptyIndex;
+            this.inputs[focusIndex]?.focus();
+        },
 
-    handleBackspace(e, index) {
-      if (index > 0) {
-        this.inputs[index - 1].focus();
-        this.inputs[index - 1].select();
-      }
-    },
-  }));
-});
+        handleBackspace(e, index) {
+            if (index > 0) {
+                this.inputs[index - 1].focus();
+                this.inputs[index - 1].select();
+            }
+        },
+    }));
+});;

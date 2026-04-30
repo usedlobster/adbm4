@@ -27,7 +27,8 @@
     "ext-redis": "*",
     "ext-pdo": "*",
     "ext-xdebug": "*",
-    "ext-zend-opcache": "*"
+    "ext-zend-opcache": "*",
+    "ext-gd": "*"
   },
   "config": {
     "optimize-autoloader": true,

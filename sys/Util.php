@@ -6,6 +6,7 @@
     {
         private static mixed $responseCode;
         private static $curlHandle = null;
+        public  static $_info = null ;
 
 
         public static function curlSend(
@@ -18,8 +19,8 @@
 
             if ( self::$curlHandle === null )
                 self::$curlHandle = curl_init();
-            $curlHandle = self::$curlHandle;
 
+            $curlHandle = self::$curlHandle;
 
             try
             {
@@ -36,7 +37,7 @@
                     {
                         $query = is_array( $data ) ? http_build_query( $data ) : $data;
                         $url   .= ( str_contains( $url , '?' ) ? '&' : '?' ) . $query;
-                    }
+                        }
                 }
                 else
                 {
@@ -94,8 +95,10 @@
                 if ( ( $raw = curl_exec( $curlHandle ) ) === false )
                     return null;
 
-                self::$responseCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-                if ( self::$responseCode >= 200 && self::$responseCode < 300)
+                self::$_info = curl_getinfo($curlHandle);
+
+                // self::$responseCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+                // if ( self::$responseCode >= 200 && self::$responseCode < 300)
                     return $raw;
             }
             catch ( \Exception $ex )
@@ -106,21 +109,32 @@
             return null;
         }
 
-
-
-        public static function constantRunTime( callable $func , $args , float $execTime = .5 )
+        /**
+         * Executes a callable function while ensuring the operation takes approximately the specified execution time.
+         * If the function completes faster than the desired execution time, the method introduces an appropriate delay.
+         * If the function exceeds the target time, it logs an error and continues with a small random delay.
+         *
+         * @param  callable  $func      The function to be executed.
+         * @param  mixed     $args      An array of arguments to be passed to the callable.
+         * @param  float     $execTime  The target execution time in seconds (default is 0.5 seconds).
+         * @param  string    $name      An optional identifier for the operation, used in the error log if an over-time occurs.
+         *
+         * @return mixed Returns the result of the executed callable function.
+         */
+        public static function constantRunTime( callable $func , $args , float $execTime = .5 , $name = '' )
         {
+
             $start = microtime(true);
             $result = $func(...$args);
             $end = microtime(true);
             $time = $execTime - ( $end - $start) ;
-            if ( $time > 0.05)
-                uSleep( floor( $time * 1e6   )) ;
-            else
-                error_log( 'Over Time' . print_r($func,true)) ;
+            if ( $time > 0)
+                usleep( (int) ( $time * 1000000 ) );
 
             return $result ;
         }
+
+
 
 
     }
