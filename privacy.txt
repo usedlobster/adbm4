@@ -1,0 +1,30 @@
+
+Privacy Policy
+
+We believe in a simple, private web. This site does not use third-party trackers, behavioral advertising, or external analytics scripts.
+
+1. What we store on your device
+
+Session Cookie:
+
+A standard PHP session cookie (PHPSESSID) is used to keep you logged in.
+It is strictly necessary for the site to function and expires when you close your browser.
+
+Local Storage: We use your browser's local storage to remember your interface preferences (such as dark/light mode) so you don't have to reset them every time you visit.
+
+Consent Choice: We store a small flag to remember if you've dismissed our informational banner.
+
+2. What we log on our server
+
+When you access this site, our server logs your IP address, browser type, and the pages you visit.
+We use this data exclusively for:
+Debugging: Fixing errors and improving site performance.
+Security: Identifying and blocking malicious bot activity.
+Basic Stats: Counting total page views for internal reporting.
+
+We do not share this data with third parties.
+
+3. External Links
+
+External Links: Our site contains links to external services like Google Maps.
+Clicking these links will take you to their platform, where their own privacy policies and tracking practices apply.

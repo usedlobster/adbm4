@@ -13,19 +13,26 @@ final class ERROR
     const int API_PARAM                 = 801;
     const int API_RATE                  = 802;
     const int API_BUSY                  = 805;
-    const int API_EXCEPT                = 897;
-    const int API_MISSING               = 898;
-    const int API_CRASH                 = 899;
+    const int API_EXCEPT                = 806;
+    const int API_MISSING               = 807;
+    const int API_CRASH                 = 808;
+    const int API_PRIVATE               = 809;
+
     // generic login errors
     const int LOGIN_FAILED              = 900;
-    const int LOGIN_MFA_UNKNOWN         = 901;
-    const int LOGIN_MFA_CODE_FMT        = 902;
-    const int LOGIN_MFA_CODE_BAD        = 903;
-    const int LOGIN_MFA_CODE_OK         = 904;
-    const int LOGIN_MFA_REG_FAILED      = 905;
-    const int LOGIN_MFA_REG_ALREADY     = 906;
+    const int LOGIN_EXPIRED             = 901;
+    const int LOGIN_TOTP_BAD            = 904;
+    const int LOGIN_METHOD_NOT_ALLOWED  = 905;
+    const int LOGIN_TOTP_INVALID        = 906;
+    const int LOGIN_BAD_ACCOUNT_NAME    = 907; // only format
+    const int LOGIN_BAD_PASSWORD        = 908; // only format
+    const int LOGIN_NO_PROJECTS         = 909;
+    const int LOGIN_FAULT               = 910;
 
-    const int LOGIN_NEED_LOGIN          = 999;
+    // server sid problem
+    const int SESSION_EXPIRED           = 1001 ;
+
+
 
     public function __construct()
     {

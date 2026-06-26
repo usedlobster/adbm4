@@ -1,0 +1,5 @@
+curl -L --fail --show-error --silent https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js -o public/js/vendor/alpine-mask.min.js
+curl -L --fail --show-error --silent https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js -o public/js/vendor/alpine-focus.min.js
+curl -L --fail --show-error --silent https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js -o public/js/vendor/alpine.min.js
+curl -L --fail --show-error --silent https://unpkg.com/@popperjs/core@2 -o public/js/vendor/popper.min.js
+curl -L --fail --show-error --silent https://unpkg.com/tippy.js@6 -o public/js/vendor/tippy.min.js

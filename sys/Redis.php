@@ -15,7 +15,6 @@ class Redis {
             if (!$inst) {
                 if (!($inst = new \Redis()))
                     return null;
-
                 $inst->connect($_ENV['REDIS_HOST'] ?? '127.0.0.1',
                     $_ENV['REDIS_PORT'] ?? 6379,
                     $_ENV['REDIS_TIMEOUT'] ?? 5);
@@ -24,10 +23,6 @@ class Redis {
                 $inst->select($index);
                 self::$_redis[$index] = $inst;
             }
-
-            // if ( !$inst->isConnected() )
-            //    return null ;
-
             return $inst;
         } catch (\Exception $ex) {
             error_log($ex->getMessage());
@@ -36,13 +31,13 @@ class Redis {
         return null;
     }
 
-    public static function saveData( $keybase , $data , $ttl = 300 , $index = 2 ) : string
+    public static function saveDataBlock( $keybase , $data , $ttl = 300 , $index = 2 ) : string
     {
         $redis = self::getRedis($index);
         if ( $redis ) {
-            $attempt = 20 ;
+            $attempt = 25 ;
             do {
-                $id = base64_encode(random_bytes(24));
+                $id = base64_encode(random_bytes(33 ));
                 $rkey = $keybase . ':' . $id ;
                 if ( !$redis->exists( $rkey )) {
                     if ( $redis->setex( $rkey , $ttl ,  serialize($data) ))
@@ -56,7 +51,7 @@ class Redis {
         return '' ;
     }
 
-    public static function loadData( $keybase , $id , $index = 2  ) : mixed {
+    public static function loadDataBlock( $keybase , $id , $index = 2  ) : mixed {
         $redis = self::getRedis($index);
         if ( $redis ) {
             $rkey = $keybase.':'.$id;
@@ -65,7 +60,7 @@ class Redis {
         return null ;
     }
 
-    public static function deleteData( $keybase , $id , $index = 2 ) : bool {
+    public static function deleteDataBlock( $keybase , $id , $index = 2 ) : bool {
         $redis = self::getRedis($index);
         if ( $redis ) {
             $rkey = $keybase.':'.$id;

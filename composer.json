@@ -1,6 +1,6 @@
 {
   "name": "wooster/app",
-  "version": "1.0.4",
+  "version": "4.0.0",
   "description": "description",
   "minimum-stability": "stable",
   "license": "proprietary",
@@ -19,16 +19,19 @@
   },
   "require": {
     "php": ">=8.5",
-    "eftec/bladeone": ">=4.19.1",
-    "vlucas/phpdotenv": "^5.6",
-    "phpmailer/phpmailer": "^6.10",
-    "ext-sodium": "*",
     "ext-curl": "*",
-    "ext-redis": "*",
+    "ext-fileinfo": "*",
+    "ext-gd": "*",
     "ext-pdo": "*",
+    "ext-redis": "*",
+    "ext-sodium": "*",
     "ext-xdebug": "*",
     "ext-zend-opcache": "*",
-    "ext-gd": "*"
+    "eftec/bladeone": ">=4.19.1",
+    "ezyang/htmlpurifier": "^4.19",
+    "hugerte/hugerte": "^1.0",
+    "phpmailer/phpmailer": "^6.10",
+    "vlucas/phpdotenv": "^5.6"
   },
   "config": {
     "optimize-autoloader": true,

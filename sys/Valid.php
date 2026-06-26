@@ -6,27 +6,7 @@ class Valid {
 
     public function __construct() {}
 
-    static function otp($otp)
-    {
-        if (!is_string($otp) || empty($otp) || strlen($otp) !== 9)
-            return false;
-        if (!preg_match('/^[1-9A-HJ-NPRSTVWXYZ]{4}-[1-9A-HJ-NPRSTVWXYZ]{4}$/', strtoupper($otp)))
-            return false;
-
-        return true;
-    }
-
-    static function otp8($otp)
-    {
-        if (!is_string($otp) || empty($otp) || strlen($otp) !== 8)
-            return false;
-        if (!preg_match('/^[1-9A-HJ-NPRSTVWXYZ]{4}[1-9A-HJ-NPRSTVWXYZ]{4}$/', strtoupper($otp)))
-            return false;
-
-        return true;
-    }
-
-    static function email($email, $checkMX = false)
+    static function email($email, $checkMX = false) : bool
     {
 
         // NB : technically an email can be > 128 but lets be sensible
@@ -39,7 +19,7 @@ class Valid {
         // If required, validate existence of MX / A records
         if ($checkMX) {
             [$local, $domain] = explode('@', $email , 2 );
-            // must have mx , or a record to be certain
+            // must have mx, or a record to be certain
             if (!checkdnsrr($domain, 'MX') && !checkdnsrr($domain, 'A'))
                 return false;
         }
@@ -47,21 +27,33 @@ class Valid {
         return true;
     }
 
-    static function username($username)
+    static function username($username) : bool
     {
         if (!is_string($username) || empty($username))
             return false;
-        // username must start with alpha, and be 3-50
-        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_-]{3,50}$/', $username))
+        // username must start with alpha , and be 4-50
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_-]{3,49}$/', $username))
             return false;
         return true;
     }
-
-
 
     static function account($account) : bool
     {
         return (\sys\Valid::username($account) || \sys\Valid::email($account));
     }
+
+    static function password( $pwd ) : bool {
+        return !( !is_string( $pwd ) || empty( $pwd ) || mb_strlen( $pwd ) > 150 ) ;
+    }
+
+    static function vCode( $vCode ) : bool {
+        return !( !is_string( $vCode ) ||
+                  empty( $vCode ) ||
+                  mb_strlen( $vCode ) !== 64 ||
+                  !preg_match( '/[0-9a-fA-F]{64}/', $vCode )
+        ) ;
+    }
+
+
 
 }

@@ -85,7 +85,7 @@
                 curl_setopt( $curlHandle , CURLOPT_HTTPHEADER , $headers );
 
                 // turn off ssl checks ( for development )
-                if ( _DEV_MODE )
+                if ( !_SSL_MODE )
                 {
                     curl_setopt( $curlHandle , CURLOPT_SSL_VERIFYHOST , false );
                     curl_setopt( $curlHandle , CURLOPT_SSL_VERIFYPEER , false );
@@ -95,8 +95,7 @@
                 if ( ( $raw = curl_exec( $curlHandle ) ) === false )
                     return null;
 
-                self::$_info = curl_getinfo($curlHandle);
-
+                // self::$_info = curl_getinfo($curlHandle);
                 // self::$responseCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
                 // if ( self::$responseCode >= 200 && self::$responseCode < 300)
                     return $raw;
@@ -135,6 +134,13 @@
         }
 
 
+        public static function recentTime( $t , int $age , int $skew = 2  )
+        {
+            if ( !is_int($t) || $age < 1 || $skew < 0 )
+                return false ;
 
+            $now = time();
+            return ( $t >= ( $now - $age - $skew ) && $t <= $now + $skew ) ;
+        }
 
     }
